@@ -1,15 +1,19 @@
 
 
+import { Route, Routes } from 'react-router-dom'
 import './App.css'
-import { Button } from "@/components/ui/button"
+import LoginPage from './components/LoginPage'
+import SignupPage from './components/SignupPage'
 
 function App() {
  
 
   return (
     <>
-      <Button onClick={()=>alert('Hadi')}>Hello World</Button>
-      
+    <Routes>
+    <Route path='/login' element={<LoginPage/>}/>
+    <Route path='/signup' element={<SignupPage/>}/>
+    </Routes>
     </>
   )
 }
