@@ -42,7 +42,7 @@ const Layout = () => {
 
         {/* Content Area */}
         <div className="flex-1 h-0 overflow-hidden">
-          <div className=" overflow-y-auto p-6 h-[90%]">
+          <div className=" overflow-y-auto p-6 h-[100%]">
             <Outlet />
           </div>
         </div>

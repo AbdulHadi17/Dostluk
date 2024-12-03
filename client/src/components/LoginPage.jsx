@@ -4,9 +4,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card.j
 import { Input } from "@/components/ui/input.jsx";
 import { FiMail, FiLock } from "react-icons/fi";
 import { Loader2 } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 const LoginPage = () => {
+
+  const navigate =useNavigate();
+
   const [loading, setloading] = useState(false);
 
   const [input, setinput] = useState({
@@ -22,6 +25,7 @@ const LoginPage = () => {
     e.preventDefault();
     setloading(true);
     setTimeout(() => {
+      navigate('/home');
       alert(input.email +" : " + input.password);
       setloading(false);
       setinput({
