@@ -1,0 +1,134 @@
+-- Table for Departments
+CREATE TABLE Department (
+    Department_ID INT PRIMARY KEY AUTO_INCREMENT,
+    Name VARCHAR(255) NOT NULL
+);
+
+-- Table for Categories
+CREATE TABLE Category (
+    Category_ID INT PRIMARY KEY AUTO_INCREMENT,
+    Category_name VARCHAR(255) NOT NULL
+);
+
+-- Table for Item Status (for Lost and Found Items)
+CREATE TABLE Item_Status (
+    Status_ID INT PRIMARY KEY AUTO_INCREMENT,
+    Status_name VARCHAR(50) NOT NULL UNIQUE
+);
+
+-- Table for Role (for Chatroom Participants)
+CREATE TABLE Role (
+    Role_ID INT PRIMARY KEY AUTO_INCREMENT,
+    Role_name VARCHAR(50) NOT NULL UNIQUE
+);
+
+-- Table for Chatroom Types
+CREATE TABLE Chatroom_Type (
+    Type_ID INT PRIMARY KEY AUTO_INCREMENT,
+    Type_name VARCHAR(50) NOT NULL UNIQUE
+);
+
+-- Table for Users
+CREATE TABLE User (
+    User_ID INT PRIMARY KEY AUTO_INCREMENT,
+    First_name VARCHAR(255) NOT NULL,
+    Last_name VARCHAR(255) NOT NULL,
+    Email VARCHAR(320) NOT NULL UNIQUE,
+    Password VARCHAR(255) NOT NULL,
+    Dept_ID INT,
+    Joined_on DATE,
+    FOREIGN KEY (Dept_ID) REFERENCES Department(Department_ID)
+);
+
+-- Table for Friendships
+CREATE TABLE Friendship (
+    User_ID_1 INT,
+    User_ID_2 INT,
+    Status VARCHAR(50),
+    Connected_since DATE,
+    PRIMARY KEY (User_ID_1, User_ID_2),
+    FOREIGN KEY (User_ID_1) REFERENCES User(User_ID),
+    FOREIGN KEY (User_ID_2) REFERENCES User(User_ID)
+);
+
+-- Table for Interests
+CREATE TABLE Interests (
+    Interests_ID INT PRIMARY KEY AUTO_INCREMENT,
+    Category_ID INT,
+    Interest_name VARCHAR(255) NOT NULL,
+    FOREIGN KEY (Category_ID) REFERENCES Category(Category_ID)
+);
+
+-- Table for User Interests
+CREATE TABLE User_Interests (
+    User_ID INT,
+    Interests_ID INT,
+    PRIMARY KEY (User_ID, Interests_ID),
+    FOREIGN KEY (User_ID) REFERENCES User(User_ID),
+    FOREIGN KEY (Interests_ID) REFERENCES Interests(Interests_ID)
+);
+
+-- Table for Chatrooms
+CREATE TABLE Chatroom (
+    Chatroom_ID INT PRIMARY KEY AUTO_INCREMENT,
+    Type_ID INT,
+    Name VARCHAR(255),
+    Description TEXT,
+    Created_by INT,
+    Created_on DATE,
+    FOREIGN KEY (Created_by) REFERENCES User(User_ID),
+    FOREIGN KEY (Type_ID) REFERENCES Chatroom_Type(Type_ID)
+);
+
+-- Table for Messages
+CREATE TABLE Message (
+    Message_ID INT PRIMARY KEY AUTO_INCREMENT,
+    Sender_ID INT,
+    Chatroom_ID INT,
+    Content TEXT,
+    Timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (Sender_ID) REFERENCES User(User_ID),
+    FOREIGN KEY (Chatroom_ID) REFERENCES Chatroom(Chatroom_ID)
+);
+
+-- Table for Chatroom Participants
+CREATE TABLE Chatroom_Participants (
+    Participation_ID INT PRIMARY KEY AUTO_INCREMENT,
+    User_ID INT,
+    Chatroom_ID INT,
+    Role_ID INT,
+    Joined_on DATE,
+    Status VARCHAR(50),
+    FOREIGN KEY (User_ID) REFERENCES User(User_ID),
+    FOREIGN KEY (Chatroom_ID) REFERENCES Chatroom(Chatroom_ID),
+    FOREIGN KEY (Role_ID) REFERENCES Role(Role_ID)
+);
+
+-- Table for Lost and Found Items
+CREATE TABLE Lost_And_Found_Item (
+    Item_ID INT PRIMARY KEY AUTO_INCREMENT,
+    Item_name VARCHAR(255) NOT NULL,
+    Description TEXT,
+    Status_ID INT,
+    Reported_By_User INT,
+    Reported_Date DATE,
+    FOREIGN KEY (Status_ID) REFERENCES Item_Status(Status_ID),
+    FOREIGN KEY (Reported_By_User) REFERENCES User(User_ID)
+);
+
+
+DELIMITER //
+
+CREATE TRIGGER before_friendship_insert
+BEFORE INSERT ON Friendship
+FOR EACH ROW
+BEGIN
+    IF NEW.User_ID_1 > NEW.User_ID_2 THEN
+        -- Swap the values to ensure User_ID_1 is smaller
+        SET @temp = NEW.User_ID_1;
+        SET NEW.User_ID_1 = NEW.User_ID_2;
+        SET NEW.User_ID_2 = @temp;
+    END IF;
+END //
+
+DELIMITER ;
