@@ -130,7 +130,7 @@ const SignupPage = () => {
                 Sign Up
               </Button>
             )}
-            <Link to={"/login"}>
+            <Link to={"/"}>
               <p className="text-sm sm:text-md text-center mt-3 cursor-pointer hover:underline underline-offset-4">
                 Already have an account?{" "}
                 <span className="text-purple-700">Login</span>

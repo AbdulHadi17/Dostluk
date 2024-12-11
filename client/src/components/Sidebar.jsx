@@ -1,10 +1,34 @@
 import React from "react";
 import { User, Search, MessageCircle, LogOut, Box } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import DostlukLogo from "@/assets/dostluksvg.svg"; // Path to the logo
+import DostlukLogo from "@/assets/dostluksvg.svg";
+import axios from "axios";
+import { toast } from "sonner"; // Path to the logo
 
 const Sidebar = ({ isSidebarVisible, setIsSidebarVisible }) => {
   const navigate = useNavigate();
+
+
+const handleLogout =async ()=>{
+  
+  try {
+    
+    const response = await axios.get('http://localhost:3000/api/v1/user/logout' , {withCredentials:true});
+
+    if(response.data.success){
+      toast.success(response.data.message);
+      navigate('/')
+    }
+    
+
+
+  } catch (error) {
+    console.log(error);
+    
+  }
+
+  
+}
 
   return (
     <aside
@@ -86,10 +110,7 @@ const Sidebar = ({ isSidebarVisible, setIsSidebarVisible }) => {
 
         {/* Logout */}
         <div
-          onClick={() => {
-            console.log("Logout clicked");
-            navigate("/login");
-          }}
+          onClick={handleLogout}
           className="flex items-center space-x-4 p-3 rounded-lg cursor-pointer hover:bg-[#48E5C2] hover:text-[#333333] transition"
         >
           <LogOut className="w-6 h-6" />

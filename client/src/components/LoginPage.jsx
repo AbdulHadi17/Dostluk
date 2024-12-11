@@ -1,40 +1,58 @@
 import React, { useState } from "react";
+import axios from "axios";
 import { Button } from "@/components/ui/button.jsx";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card.jsx";
 import { Input } from "@/components/ui/input.jsx";
 import { FiMail, FiLock } from "react-icons/fi";
 import { Loader2 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 
 const LoginPage = () => {
 
-  const navigate =useNavigate();
+  const navigate = useNavigate();
 
   const [loading, setloading] = useState(false);
-
   const [input, setinput] = useState({
     email: "",
     password: "",
   });
+  const [error, setError] = useState("");  // State to handle error messages
 
   const handleChange = (e) => {
     setinput({ ...input, [e.target.name]: e.target.value });
   };
 
   const submitform = async (e) => {
-    e.preventDefault();
     setloading(true);
-    setTimeout(() => {
-      navigate('/home');
-      alert(input.email +" : " + input.password);
-      setloading(false);
-      setinput({
-        email: "",
-        password: "",
+    e.preventDefault();
+  
+    try {
+      const res = await axios.post("http://localhost:3000/api/v1/user/login", input, {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        withCredentials: true,
       });
-    }, 2000);
-  };
 
+      if (res.data.success) {
+        toast.success(res.data.message);
+        setError("");  // Clear any previous error messages
+        navigate('/home');
+        setinput({
+          email: "",
+          password: "",
+        });
+      }
+      
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Something went wrong, please try again later.");
+      setError(error.response?.data?.message || "Something went wrong, please try again later.");
+    } finally {
+      setloading(false);
+    }
+  };
+  
   return (
     <div
       style={{ backgroundColor: "#040F0F" }}
@@ -77,7 +95,7 @@ const LoginPage = () => {
                 required
               />
             </div>
-            {/* Submit Button */}
+                       {/* Submit Button */}
             {loading ? (
               <Button
                 disabled={true}
