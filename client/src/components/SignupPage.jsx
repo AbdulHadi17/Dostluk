@@ -1,21 +1,41 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button.jsx";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card.jsx";
 import { Input } from "@/components/ui/input.jsx";
 import { FiMail, FiLock, FiUser } from "react-icons/fi";
 import { Loader2 } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { toast } from "sonner";
+import axios from "axios"; // Ensure axios is installed
 
 const SignupPage = () => {
   const [loading, setLoading] = useState(false);
 
+  // Separate state for form data, including department
   const [input, setInput] = useState({
     username: "",
     email: "",
     password: "",
     confirmPassword: "",
+    department: "", // Add department directly to the input state (ID)
   });
 
+  const [departments, setDepartments] = useState([]); // State for departments (ensure it starts as an array)
+  const navigate = useNavigate(); // Initialize navigate for redirection after successful signup
+
+  useEffect(() => {
+    // Fetch departments when the component mounts
+    const fetchDepartments = async () => {
+      try {
+        const response = await axios.get("http://localhost:3000/api/v1/department/getdepartments");
+        setDepartments(response.data.departments || []); // Ensure it's an array
+      } catch (error) {
+        toast.error("Failed to load departments");
+      }
+    };
+
+    fetchDepartments();
+  }, []);
 
   const handleChange = (e) => {
     setInput({ ...input, [e.target.name]: e.target.value });
@@ -25,26 +45,56 @@ const SignupPage = () => {
     e.preventDefault();
     setLoading(true);
 
-    setTimeout(() => {
-      const { username, email, password, confirmPassword } = input;
-
-      
-      // Check for password match
-      if (password !== confirmPassword) {
-        alert("Passwords do not match!");
-      } 
-      else {
-        alert(`Username: ${username}\nEmail: ${email}\nPassword: ${password}`);
-      }
-
+    // Check if passwords match
+    if (input.password !== input.confirmPassword) {
+      toast.error("Passwords do not match!");
       setLoading(false);
-      setInput({
-        username: "",
-        email: "",
-        password: "",
-        confirmPassword: "",
+      return;
+    }
+
+    // Find the department ID based on the department name
+    const selectedDepartment = departments.find(dept => dept.Department_ID === parseInt(input.department));
+
+    if (!selectedDepartment) {
+      toast.error("Please select a valid department.");
+      setLoading(false);
+      return;
+    }
+
+    const payload = {
+      ...input, // Spread all form data
+      dept_id: selectedDepartment.Department_ID, // Pass the department ID to the backend
+    };
+
+    try {
+      // Make API request to register the user
+      const res = await axios.post("http://localhost:3000/api/v1/user/register", payload, {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        withCredentials: true, // Add credentials if necessary
       });
-    }, 2000);
+
+
+      if (res.data.success) {
+        toast.success(res.data.message);
+        navigate('/'); // Redirect to login page after successful signup
+
+        // Clear form inputs after successful signup
+        setInput({
+          username: "",
+          email: "",
+          password: "",
+          confirmPassword: "",
+          department: "", // Reset department
+        });
+      }
+    } catch (error) {
+      // Handle error from API
+      toast.error(error.response?.data?.message || "Something went wrong, please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -115,6 +165,28 @@ const SignupPage = () => {
                 required
               />
             </div>
+            {/* Department Combobox (Vanilla Select Dropdown) */}
+            <div className="relative">
+              <select
+                value={input.department}
+                onChange={handleChange}
+                name="department" // Use name to bind to the input state
+                className="pl-10 text-sm sm:text-base bg-slate-800 rounded-md outline-none text-gray-100 border-2 border-slate-600 w-full py-2"
+                required
+              >
+                <option value="" disabled>Select Department</option>
+                {departments && departments.length > 0 ? (
+                  departments.map((dept) => (
+                    <option key={dept.Department_ID} value={dept.Department_ID}>
+                      {dept.Name}
+                    </option>
+                  ))
+                ) : (
+                  <option>No departments available</option>
+                )}
+              </select>
+            </div>
+
             {/* Submit Button */}
             {loading ? (
               <Button
@@ -130,6 +202,7 @@ const SignupPage = () => {
                 Sign Up
               </Button>
             )}
+
             <Link to={"/"}>
               <p className="text-sm sm:text-md text-center mt-3 cursor-pointer hover:underline underline-offset-4">
                 Already have an account?{" "}

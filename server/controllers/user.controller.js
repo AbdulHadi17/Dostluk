@@ -5,7 +5,7 @@ import connectDB from '../database/db.js'; // Import the connectDB function
 // Register function
 export const Register = async (req, res) => {
     try {
-        const { email, password, dept_id, full_name } = req.body;
+        const { email, password, dept_id, username } = req.body;
 
         // Check if the email ends with @student.nust.edu.pk
         const emailRegex = /^[a-zA-Z0-9._%+-]+@student\.nust\.edu\.pk$/;
@@ -13,7 +13,7 @@ export const Register = async (req, res) => {
             return res.status(401).json({ message: "Only nust outlook mail is accepted", success: false });
         }
 
-        if (!email || !password || !dept_id || !full_name) {
+        if (!email || !password || !dept_id || !username) {
             return res.status(401).json({ message: "Please Fill in the empty Fields", success: false });
         }
 
@@ -29,7 +29,7 @@ export const Register = async (req, res) => {
 
         const joined_on = new Date().toISOString().split('T')[0]; // Get current date in YYYY-MM-DD format
 
-        await db.promise().execute('INSERT INTO user (email, password, dept_id, full_name, joined_on) VALUES (?, ?, ?, ?, ?)', [email, hashedPassword, dept_id, full_name, joined_on]);
+        await db.promise().execute('INSERT INTO user (email, password, dept_id, username, joined_on) VALUES (?, ?, ?, ?, ?)', [email, hashedPassword, dept_id, username, joined_on]);
 
         return res.status(201).json({ message: "Account created successfully", success: true });
 
@@ -38,7 +38,6 @@ export const Register = async (req, res) => {
         return res.status(500).json({ message: "Server Error", success: false });
     }
 };
-
 // Login function
 export const Login = async (req, res) => {
     try {
@@ -65,13 +64,13 @@ export const Login = async (req, res) => {
         const token = jwt.sign({ userId: user[0].User_ID }, process.env.VITE_SECRET_KEY, { expiresIn: '1d' });
 
         return res.cookie("token", token, { httpOnly: true, sameSite: "strict", maxAge: 1 * 24 * 60 * 60 * 1000 }).json({
-            message: `Welcome Back ${user[0].Full_name}`,
+            message: `Welcome Back ${user[0].username}`,
             success: true,
             user: {
                 id: user[0].User_ID,
                 email: user[0].Email,
                 dept_id: user[0].Dept_ID,
-                full_name: user[0].Full_name,
+                username: user[0].username,
                 joined_on: user[0].Joined_on
             }
         });

@@ -31,8 +31,7 @@ CREATE TABLE Chatroom_Type (
 -- Table for Users
 CREATE TABLE User (
     User_ID INT PRIMARY KEY AUTO_INCREMENT,
-    First_name VARCHAR(255) NOT NULL,
-    Last_name VARCHAR(255) NOT NULL,
+    username VARCHAR(255) NOT NULL,
     Email VARCHAR(320) NOT NULL UNIQUE,
     Password VARCHAR(255) NOT NULL,
     Dept_ID INT,

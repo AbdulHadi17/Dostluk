@@ -5,8 +5,7 @@ import LostAndFound from './routes/LostAndFound.route.js';
 import dotenv from 'dotenv';
 import connectDB from './database/db.js';
 import User from './routes/User.route.js';
-
-
+import Department from './routes/department.route.js'
 
 dotenv.config({});
 
@@ -31,6 +30,7 @@ app.use(cookieParser());
 //Routes
 app.use('/api/v1/LostAndFound', LostAndFound);
 app.use('/api/v1/user', User);
+app.use('/api/v1/department',Department);
 
 
 app.get('/',(req,res)=>{
