@@ -1,0 +1,14 @@
+INSERT INTO Category (Category_name) VALUES
+('Sports'),
+('Entertainment'),
+('Fitness and Wellness'),
+('Travel'),
+('Technology'),
+('Food and Drink'),
+('Books and Literature'),
+('Fashion'),
+('DIY and Crafts'),
+('Science and Nature'),
+('Professional Development'),
+('Clubs and Societies'),
+('Social Activities');

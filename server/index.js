@@ -17,11 +17,9 @@ const corsOptions = {
     methods: 'GET,POST,PUT,DELETE', // Allow specific methods
     credentials: true, // Allow credentials (cookies, HTTP authentication)
   };
-  
-  // Enable CORS with the above options
-  app.use(cors(corsOptions));
 
 //Middlewares
+app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({extended:true}));
 app.use(cookieParser());
@@ -33,10 +31,10 @@ app.use('/api/v1/user', User);
 app.use('/api/v1/department',Department);
 
 
-app.get('/',(req,res)=>{
-    res.send('Hello World');
-    console.log('Connected');
+app.get('/' , (req,res)=>{
+    res.status(200).json({success:true , data:"none"})
 })
+
 
 connectDB().then(()=>{
 

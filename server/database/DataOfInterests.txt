@@ -1,0 +1,127 @@
+INSERT INTO Interests (Category_ID, Interest_name)
+VALUES
+-- Sports
+((SELECT Category_ID FROM Category WHERE Category_name = 'Sports'), 'Football'),
+((SELECT Category_ID FROM Category WHERE Category_name = 'Sports'), 'Basketball'),
+((SELECT Category_ID FROM Category WHERE Category_name = 'Sports'), 'Cricket'),
+((SELECT Category_ID FROM Category WHERE Category_name = 'Sports'), 'Badminton'),
+((SELECT Category_ID FROM Category WHERE Category_name = 'Sports'), 'Table Tennis'),
+((SELECT Category_ID FROM Category WHERE Category_name = 'Sports'), 'Swimming'),
+((SELECT Category_ID FROM Category WHERE Category_name = 'Sports'), 'Running'),
+((SELECT Category_ID FROM Category WHERE Category_name = 'Sports'), 'Cycling'),
+((SELECT Category_ID FROM Category WHERE Category_name = 'Sports'), 'Rock Climbing'),
+((SELECT Category_ID FROM Category WHERE Category_name = 'Sports'), 'Volleyball'),
+((SELECT Category_ID FROM Category WHERE Category_name = 'Sports'), 'Futsal'),
+
+-- Entertainment
+((SELECT Category_ID FROM Category WHERE Category_name = 'Entertainment'), 'Movies'),
+((SELECT Category_ID FROM Category WHERE Category_name = 'Entertainment'), 'TV Shows'),
+((SELECT Category_ID FROM Category WHERE Category_name = 'Entertainment'), 'Pop Music'),
+((SELECT Category_ID FROM Category WHERE Category_name = 'Entertainment'), 'Rock Music'),
+((SELECT Category_ID FROM Category WHERE Category_name = 'Entertainment'), 'Hip-Hop Music'),
+((SELECT Category_ID FROM Category WHERE Category_name = 'Entertainment'), 'Jazz Music'),
+((SELECT Category_ID FROM Category WHERE Category_name = 'Entertainment'), 'Video Games'),
+((SELECT Category_ID FROM Category WHERE Category_name = 'Entertainment'), 'Board Games'),
+((SELECT Category_ID FROM Category WHERE Category_name = 'Entertainment'), 'Card Games'),
+((SELECT Category_ID FROM Category WHERE Category_name = 'Entertainment'), 'Stand-Up Comedy'),
+((SELECT Category_ID FROM Category WHERE Category_name = 'Entertainment'), 'Anime'),
+((SELECT Category_ID FROM Category WHERE Category_name = 'Entertainment'), 'Podcasts'),
+
+-- Fitness and Wellness
+((SELECT Category_ID FROM Category WHERE Category_name = 'Fitness and Wellness'), 'Gym'),
+((SELECT Category_ID FROM Category WHERE Category_name = 'Fitness and Wellness'), 'Yoga'),
+((SELECT Category_ID FROM Category WHERE Category_name = 'Fitness and Wellness'), 'Meditation'),
+((SELECT Category_ID FROM Category WHERE Category_name = 'Fitness and Wellness'), 'Hiking'),
+((SELECT Category_ID FROM Category WHERE Category_name = 'Fitness and Wellness'), 'Cycling'),
+((SELECT Category_ID FROM Category WHERE Category_name = 'Fitness and Wellness'), 'Home Workouts'),
+((SELECT Category_ID FROM Category WHERE Category_name = 'Fitness and Wellness'), 'Dance Fitness (Zumba)'),
+
+-- Travel
+((SELECT Category_ID FROM Category WHERE Category_name = 'Travel'), 'Backpacking'),
+((SELECT Category_ID FROM Category WHERE Category_name = 'Travel'), 'Road Trips'),
+((SELECT Category_ID FROM Category WHERE Category_name = 'Travel'), 'Hiking Tours'),
+((SELECT Category_ID FROM Category WHERE Category_name = 'Travel'), 'Local Cuisine'),
+((SELECT Category_ID FROM Category WHERE Category_name = 'Travel'), 'Budget Travel'),
+((SELECT Category_ID FROM Category WHERE Category_name = 'Travel'), 'Cultural Tours'),
+
+-- Technology
+((SELECT Category_ID FROM Category WHERE Category_name = 'Technology'), 'Web Development'),
+((SELECT Category_ID FROM Category WHERE Category_name = 'Technology'), 'Mobile Apps'),
+((SELECT Category_ID FROM Category WHERE Category_name = 'Technology'), 'AI and Machine Learning'),
+((SELECT Category_ID FROM Category WHERE Category_name = 'Technology'), 'PC Gaming'),
+((SELECT Category_ID FROM Category WHERE Category_name = 'Technology'), 'Console Gaming'),
+((SELECT Category_ID FROM Category WHERE Category_name = 'Technology'), 'VR and AR Games'),
+((SELECT Category_ID FROM Category WHERE Category_name = 'Technology'), 'Drones'),
+((SELECT Category_ID FROM Category WHERE Category_name = 'Technology'), 'Smartphones'),
+((SELECT Category_ID FROM Category WHERE Category_name = 'Technology'), '3D Printing'),
+((SELECT Category_ID FROM Category WHERE Category_name = 'Technology'), 'Graphic Design'),
+
+-- Food and Drink
+((SELECT Category_ID FROM Category WHERE Category_name = 'Food and Drink'), 'Baking'),
+((SELECT Category_ID FROM Category WHERE Category_name = 'Food and Drink'), 'Grilling'),
+((SELECT Category_ID FROM Category WHERE Category_name = 'Food and Drink'), 'Coffee'),
+((SELECT Category_ID FROM Category WHERE Category_name = 'Food and Drink'), 'Tea'),
+((SELECT Category_ID FROM Category WHERE Category_name = 'Food and Drink'), 'Chocolate Tasting'),
+((SELECT Category_ID FROM Category WHERE Category_name = 'Food and Drink'), 'Pastries'),
+((SELECT Category_ID FROM Category WHERE Category_name = 'Food and Drink'), 'Cooking Challenges'),
+((SELECT Category_ID FROM Category WHERE Category_name = 'Food and Drink'), 'Food Blogging'),
+
+-- Books and Literature
+((SELECT Category_ID FROM Category WHERE Category_name = 'Books and Literature'), 'Fiction'),
+((SELECT Category_ID FROM Category WHERE Category_name = 'Books and Literature'), 'Non-Fiction'),
+((SELECT Category_ID FROM Category WHERE Category_name = 'Books and Literature'), 'Fantasy'),
+((SELECT Category_ID FROM Category WHERE Category_name = 'Books and Literature'), 'Biographies'),
+((SELECT Category_ID FROM Category WHERE Category_name = 'Books and Literature'), 'Poetry'),
+((SELECT Category_ID FROM Category WHERE Category_name = 'Books and Literature'), 'Blogging'),
+((SELECT Category_ID FROM Category WHERE Category_name = 'Books and Literature'), 'Journaling'),
+((SELECT Category_ID FROM Category WHERE Category_name = 'Books and Literature'), 'Self-Help Books'),
+((SELECT Category_ID FROM Category WHERE Category_name = 'Books and Literature'), 'E-Books and Audiobooks'),
+
+-- Fashion
+((SELECT Category_ID FROM Category WHERE Category_name = 'Fashion'), 'Streetwear'),
+((SELECT Category_ID FROM Category WHERE Category_name = 'Fashion'), 'Casualwear'),
+((SELECT Category_ID FROM Category WHERE Category_name = 'Fashion'), 'Jewelry'),
+((SELECT Category_ID FROM Category WHERE Category_name = 'Fashion'), 'Shoes'),
+((SELECT Category_ID FROM Category WHERE Category_name = 'Fashion'), 'Thrifting'),
+((SELECT Category_ID FROM Category WHERE Category_name = 'Fashion'), 'Personal Styling'),
+
+-- DIY and Crafts
+((SELECT Category_ID FROM Category WHERE Category_name = 'DIY and Crafts'), 'Knitting'),
+((SELECT Category_ID FROM Category WHERE Category_name = 'DIY and Crafts'), 'Embroidery'),
+((SELECT Category_ID FROM Category WHERE Category_name = 'DIY and Crafts'), 'Painting'),
+((SELECT Category_ID FROM Category WHERE Category_name = 'DIY and Crafts'), 'Decorating'),
+((SELECT Category_ID FROM Category WHERE Category_name = 'DIY and Crafts'), 'DIY Home Projects'),
+((SELECT Category_ID FROM Category WHERE Category_name = 'DIY and Crafts'), 'Upcycling Clothes'),
+
+-- Science and Nature
+((SELECT Category_ID FROM Category WHERE Category_name = 'Science and Nature'), 'Stargazing'),
+((SELECT Category_ID FROM Category WHERE Category_name = 'Science and Nature'), 'Bird Watching'),
+((SELECT Category_ID FROM Category WHERE Category_name = 'Science and Nature'), 'Recycling'),
+((SELECT Category_ID FROM Category WHERE Category_name = 'Science and Nature'), 'Sustainability Projects'),
+((SELECT Category_ID FROM Category WHERE Category_name = 'Science and Nature'), 'Gardening'),
+((SELECT Category_ID FROM Category WHERE Category_name = 'Science and Nature'), 'Urban Farming'),
+
+-- Professional Development
+((SELECT Category_ID FROM Category WHERE Category_name = 'Professional Development'), 'Resume Building'),
+((SELECT Category_ID FROM Category WHERE Category_name = 'Professional Development'), 'Public Speaking'),
+((SELECT Category_ID FROM Category WHERE Category_name = 'Professional Development'), 'Networking'),
+((SELECT Category_ID FROM Category WHERE Category_name = 'Professional Development'), 'LinkedIn Optimization'),
+((SELECT Category_ID FROM Category WHERE Category_name = 'Professional Development'), 'Freelancing'),
+((SELECT Category_ID FROM Category WHERE Category_name = 'Professional Development'), 'Entrepreneurship'),
+((SELECT Category_ID FROM Category WHERE Category_name = 'Professional Development'), 'Personal Finance Management'),
+
+-- Clubs and Societies
+((SELECT Category_ID FROM Category WHERE Category_name = 'Clubs and Societies'), 'Debate Club'),
+((SELECT Category_ID FROM Category WHERE Category_name = 'Clubs and Societies'), 'Drama Society'),
+((SELECT Category_ID FROM Category WHERE Category_name = 'Clubs and Societies'), 'Tech Club'),
+((SELECT Category_ID FROM Category WHERE Category_name = 'Clubs and Societies'), 'Photography Club'),
+((SELECT Category_ID FROM Category WHERE Category_name = 'Clubs and Societies'), 'Music Club'),
+((SELECT Category_ID FROM Category WHERE Category_name = 'Clubs and Societies'), 'Environment Club'),
+((SELECT Category_ID FROM Category WHERE Category_name = 'Clubs and Societies'), 'Entrepreneurship Club'),
+
+-- Social Activities
+((SELECT Category_ID FROM Category WHERE Category_name = 'Social Activities'), 'Event Hosting'),
+((SELECT Category_ID FROM Category WHERE Category_name = 'Social Activities'), 'Volunteering'),
+((SELECT Category_ID FROM Category WHERE Category_name = 'Social Activities'), 'Charity Drives'),
+((SELECT Category_ID FROM Category WHERE Category_name = 'Social Activities'), 'Peer Mentoring'),
+((SELECT Category_ID FROM Category WHERE Category_name = 'Social Activities'), 'Community Cleanups');
