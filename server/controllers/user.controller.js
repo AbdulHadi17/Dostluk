@@ -73,7 +73,8 @@ export const Login = async (req, res) => {
                 email: user[0].Email,
                 dept_id: user[0].Dept_ID,
                 username: user[0].username,
-                joined_on: user[0].Joined_on
+                joined_on: user[0].Joined_on,
+                profilePicture: user[0].profilePicture
             }
         });
     } catch (error) {
@@ -240,3 +241,91 @@ export const getUserData = async (req, res) => {
   }
 };
 
+export const findFriends = async (req, res) => {
+  try {
+    // Get the user ID from cookies (assuming it's set during login)
+    const userId = req.id;
+    if (!userId) {
+      return res.status(401).json({ message: 'User not logged in', success: false });
+    }
+
+    const db = await connectDB();
+
+    // Query to fetch friend recommendations
+    const [recommendations] = await db.promise().execute(
+      `
+      SELECT 
+        u.User_ID AS userId, 
+        u.username AS name, 
+        u.profilePicture AS profilePicture, 
+        GROUP_CONCAT(i.Interest_Name) AS commonInterests, 
+        ROUND(
+            (
+                /* Hybrid Similarity Calculation */
+                (COUNT(ui.Interests_ID) / 
+                    (SELECT COUNT(*) FROM User_Interests WHERE User_ID = ?)) * 0.4 /* Jaccard Weight */
+                +
+                (COUNT(ui.Interests_ID) / 
+                    SQRT((SELECT COUNT(*) FROM User_Interests WHERE User_ID = ?) * (SELECT COUNT(*) FROM User_Interests WHERE User_ID = u.User_ID))) * 0.3 /* Cosine Weight */
+                +
+                (COUNT(DISTINCT i.Category_ID) / 
+                    (SELECT COUNT(DISTINCT i2.Category_ID) 
+                     FROM User_Interests ui2 
+                     JOIN Interests i2 ON ui2.Interests_ID = i2.Interests_ID 
+                     WHERE ui2.User_ID = ?)) * 0.3 /* Category Weight */
+            ) * 100, 
+            2
+        ) AS similarityPercentage
+      FROM 
+        User u
+      JOIN 
+        User_Interests ui ON u.User_ID = ui.User_ID
+      JOIN 
+        Interests i ON ui.Interests_ID = i.Interests_ID
+      WHERE 
+        u.User_ID != ?
+        AND u.User_ID NOT IN (
+            SELECT User_ID_2 FROM Friendship WHERE User_ID_1 = ?
+            UNION 
+            SELECT User_ID_1 FROM Friendship WHERE User_ID_2 = ?
+        )
+        AND ui.Interests_ID IN (
+            SELECT Interests_ID FROM User_Interests WHERE User_ID = ?
+        )
+      GROUP BY 
+        u.User_ID
+      ORDER BY 
+        similarityPercentage DESC
+      LIMIT 5;
+      `,
+      [userId, userId, userId, userId, userId, userId, userId]
+    );
+
+    // Transform data for the response
+    const response = recommendations.map((user) => ({
+      id: user.userId,
+      name: user.name,
+      profilePicture: user.profilePicture,
+      commonInterests: user.commonInterests ? user.commonInterests.split(',') : [],
+      similarityPercentage: user.similarityPercentage // Convert to array
+    }));
+
+    // Send response
+    return res.status(200).json({
+      success: true,
+      data: response,
+    });
+  } catch (error) {
+    console.error('Error finding friends:', error);
+    return res.status(500).json({ message: 'Server Error', success: false });
+  }
+};
+
+
+
+
+export const sendFriendRequest = async (req, res) => {
+
+
+
+};

@@ -1,0 +1,47 @@
+-- SELECT 
+--     u.User_ID AS userId, 
+--     u.username, 
+--     u.Email AS email, 
+--     COUNT(ui.Interests_ID) AS commonInterests,
+--     GROUP_CONCAT(i.Interest_Name) AS commonInterestNames,
+--     COUNT(DISTINCT i.Category_ID) AS commonCategories,
+--     ROUND(
+--         (
+--             /* Hybrid Similarity Calculation */
+--             (COUNT(ui.Interests_ID) / 
+--                 (SELECT COUNT(*) FROM User_Interests WHERE User_ID = 5)) * 0.4 /* Jaccard Weight */
+--             +
+--             (COUNT(ui.Interests_ID) / 
+--                 SQRT((SELECT COUNT(*) FROM User_Interests WHERE User_ID = 5) * (SELECT COUNT(*) FROM User_Interests WHERE User_ID = u.User_ID))) * 0.3 /* Cosine Weight */
+--             +
+--             (COUNT(DISTINCT i.Category_ID) / 
+--                 (SELECT COUNT(DISTINCT i2.Category_ID) 
+--                  FROM User_Interests ui2 
+--                  JOIN Interests i2 ON ui2.Interests_ID = i2.Interests_ID 
+--                  WHERE ui2.User_ID = 5)) * 0.3 /* Category Weight */
+--         ) * 100, 
+--         2
+--     ) AS similarityPercentage
+-- FROM 
+--     User u
+-- JOIN 
+--     User_Interests ui ON u.User_ID = ui.User_ID
+-- JOIN 
+--     Interests i ON ui.Interests_ID = i.Interests_ID
+-- JOIN 
+--     Category c ON i.Category_ID = c.Category_ID
+-- WHERE 
+--     u.User_ID != 5
+--     AND u.User_ID NOT IN (
+--         SELECT User_ID_2 FROM Friendship WHERE User_ID_1 = 5
+--         UNION 
+--         SELECT User_ID_1 FROM Friendship WHERE User_ID_2 = 5
+--     )
+--     AND ui.Interests_ID IN (
+--         SELECT Interests_ID FROM User_Interests WHERE User_ID = 5
+--     )
+-- GROUP BY 
+--     u.User_ID
+-- ORDER BY 
+--     similarityPercentage DESC
+-- LIMIT 5;
