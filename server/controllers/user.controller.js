@@ -97,76 +97,72 @@ export const Logout = async (req, res) => {
 
 // Edit profile function
 export const editProfile = async (req, res) => {
-    try {
-      const { username, selectedInterests } = req.body; // selectedInterests is already an array
-      const userId = req.id; // Assuming middleware sets userId
-      const profilePictureFile = req.file;
-  
-      console.log('User ID:', userId);
-      console.log('Request Body:', req.body);
-      console.log('Uploaded File:', req.file);
-      console.log('Selected Interests:', selectedInterests);
-  
-      if (!userId) {
-        return res.status(401).json({ message: 'User not authenticated' });
-      }
-  
-      const db = await connectDB();
-  
-      // Fetch current profilePicture if no file uploaded
-      const [user] = await db.promise().execute('SELECT profilePicture FROM user WHERE User_ID = ?', [userId]);
-      let profilePictureUrl = user[0]?.profilePicture || null;
-  
-      if (profilePictureFile) {
-        const fileUri = getDataUri(profilePictureFile);
-        console.log('File URI:', fileUri);
-  
-        const uploadResult = await cloudinary.uploader.upload(fileUri);
-        profilePictureUrl = uploadResult.secure_url;
-        console.log('Uploaded Profile Picture URL:', profilePictureUrl);
-      }
-  
-      // Update username and profilePicture
-      await db.promise().execute(
-        'UPDATE user SET username = ?, profilePicture = ? WHERE User_ID = ?',
-        [username || user[0]?.username, profilePictureUrl, userId]
-      );
-      console.log('User updated successfully');
-  
-      // Handle selected interests
-      if (selectedInterests && Array.isArray(selectedInterests)) {
-        await db.promise().execute('DELETE FROM user_interests WHERE User_ID = ?', [userId]);
-  
-        const interestIds = await Promise.all(
-          selectedInterests.map(async (interest) => {
-            const [result] = await db
-              .promise()
-              .execute('SELECT Interests_ID FROM interests WHERE Interest_name = ?', [interest]);
-            console.log(`Interest Result for "${interest}":`, result);
-            return result[0]?.Interests_ID || null;
-          })
-        );
-  
-        const validInterestIds = interestIds.filter((id) => id !== null);
-  
-        console.log('Valid Interest IDs:', validInterestIds);
-  
-        await Promise.all(
-          validInterestIds.map((interestId) =>
-            db.promise().execute('INSERT INTO user_interests (User_ID, Interests_ID) VALUES (?, ?)', [userId, interestId])
-          )
-        );
-        console.log('Interests updated successfully');
-      }
-  
-      res.status(200).json({ message: 'Profile updated successfully' });
-    } catch (error) {
-      console.error('Error in editProfile:', error);
-      res.status(500).json({ message: 'Server Error', error: error.message });
+  try {
+    const { username, selectedInterests } = req.body;
+
+    // Initialize newselectedInterests
+    let newselectedInterests = selectedInterests;
+
+    // If selectedInterests is a string, parse it into an array
+    if (typeof selectedInterests === 'string') {
+      newselectedInterests = JSON.parse(selectedInterests);
     }
-  };
-  
-  
+
+    // Check if selectedInterests is an array (after parsing if necessary)
+    if (!Array.isArray(newselectedInterests)) {
+      return res.status(400).json({ message: 'Selected interests must be an array' });
+    }
+
+    const userId = req.id; // Assuming middleware sets userId
+    const profilePictureFile = req.file;
+
+    if (!userId) {
+      return res.status(401).json({ message: 'User not authenticated' });
+    }
+
+    const db = await connectDB();
+
+    // Fetch current profilePicture if no file uploaded
+    const [user] = await db.promise().execute('SELECT profilePicture FROM user WHERE User_ID = ?', [userId]);
+    let profilePictureUrl = user[0]?.profilePicture || null;
+
+    if (profilePictureFile) {
+      const fileUri = getDataUri(profilePictureFile);
+      const uploadResult = await cloudinary.uploader.upload(fileUri);
+      profilePictureUrl = uploadResult.secure_url;
+    }
+
+    // Update username and profilePicture
+    await db.promise().execute(
+      'UPDATE user SET username = ?, profilePicture = ? WHERE User_ID = ?',
+      [username || user[0]?.username, profilePictureUrl, userId]
+    );
+
+    // Handle selected interests
+    await db.promise().execute('DELETE FROM user_interests WHERE User_ID = ?', [userId]);
+
+    const interestIds = await Promise.all(
+      newselectedInterests.map(async (interest) => {
+        const [result] = await db
+          .promise()
+          .execute('SELECT Interests_ID FROM interests WHERE Interest_name = ?', [interest]);
+        return result[0]?.Interests_ID || null;
+      })
+    );
+
+    const validInterestIds = interestIds.filter((id) => id !== null);
+
+    await Promise.all(
+      validInterestIds.map((interestId) =>
+        db.promise().execute('INSERT INTO user_interests (User_ID, Interests_ID) VALUES (?, ?)', [userId, interestId])
+      )
+    );
+
+    res.status(200).json({ message: 'Profile updated successfully' });
+  } catch (error) {
+    res.status(500).json({ message: 'Server Error', error: error.message });
+  }
+};
 
 // Fetch categories and interests function
 export const getCategoriesAndInterests = async (req, res) => {

@@ -107,11 +107,10 @@ const handleSave = async () => {
   const formData = new FormData();
   formData.append('username', username);
   formData.append('selectedInterests', JSON.stringify(selectedInterests));
+  
   if (profilePictureFile) {
     formData.append('profilePicture', profilePictureFile); // Attach file
   }
-
-  
 
   try {
     const response = await axios.post('http://localhost:3000/api/v1/user/editprofile', formData, {
