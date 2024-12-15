@@ -151,7 +151,7 @@ const handleSave = async () => {
 
   return (
     <Card className="w-full max-w-4xl mx-auto bg-white">
-      <CardHeader className="bg-gray-100">
+      <CardHeader className="bg-slate-100 shadow-xl border-b-2 border-gray-300">
         <CardTitle className="text-2xl font-bold text-black">Edit Profile</CardTitle>
       </CardHeader>
       <CardContent className="space-y-8 bg-white p-6">

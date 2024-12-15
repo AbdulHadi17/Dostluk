@@ -1,70 +1,63 @@
-import { useState } from "react";
-import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
+import { useState, useEffect } from "react";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel";
 import { User, Star, Check } from "lucide-react";
-import { Badge } from "@/components/ui/badge"; // Assuming you have a Badge component from Shadcn.
-import { Card, CardContent } from "@/components/ui/card"; // Importing Card components.
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
+import axios from "axios";
+import { toast, Toaster } from "sonner";
 
 const FindFriends = () => {
-  // Sample suggested profiles
-  const suggestedProfiles = [
-    {
-      id: 1,
-      name: "John Doe",
-      profilePic: "https://via.placeholder.com/150",
-      hobbies: ["Photography", "Traveling", "Cooking"],
-      similarityPercentage: 87,
-    },
-    {
-      id: 2,
-      name: "Jane Smith",
-      profilePic: "https://via.placeholder.com/150",
-      hobbies: ["Music", "Dancing", "Yoga"],
-      similarityPercentage: 92,
-    },
-    {
-      id: 3,
-      name: "Sam Wilson",
-      profilePic: "https://via.placeholder.com/150",
-      hobbies: ["Gaming", "Tech", "Sports"],
-      similarityPercentage: 78,
-    },
-    {
-      id: 4,
-      name: "Emily Davis",
-      profilePic: "https://via.placeholder.com/150",
-      hobbies: ["Reading", "Writing", "Painting"],
-      similarityPercentage: 85,
-    },
-    {
-      id: 5,
-      name: "Michael Brown",
-      profilePic: "https://via.placeholder.com/150",
-      hobbies: ["Hiking", "Fishing", "Camping"],
-      similarityPercentage: 88,
-    },
-    {
-      id: 6,
-      name: "Sophia Taylor",
-      profilePic: "https://via.placeholder.com/150",
-      hobbies: ["Fitness", "Meditation", "Cooking"],
-      similarityPercentage: 91,
-    },
-  ];
-
+  const [suggestedProfiles, setSuggestedProfiles] = useState([]);
   const [friendRequests, setFriendRequests] = useState({});
+
+  useEffect(() => {
+    const fetchSuggestedProfiles = async () => {
+      try {
+        const response = await axios.get('http://localhost:3000/api/v1/user/findfriends', {withCredentials: true});
+
+        
+        if (response.data.success) {
+          setSuggestedProfiles(response.data.data);
+          toast.success("Friend suggested based on your interests!");
+        } else {
+          toast.error(`Failed to fetch suggestions: ${response.data.message}`);
+        }
+      } catch (error) {
+        console.error("Error fetching suggested profiles:", error);
+        toast.error("Error fetching friend suggestions. Please try again later.");
+      }
+    };
+
+    fetchSuggestedProfiles();
+  }, []);
 
   const toggleFriendRequest = (id) => {
     setFriendRequests((prev) => ({
       ...prev,
       [id]: !prev[id],
     }));
+
+    // Display toast notification for friend request status
+    if (!friendRequests[id]) {
+      toast.success("Friend request sent!");
+    } else {
+      toast.info("Friend request canceled.");
+    }
   };
 
   return (
     <div className="h-full bg-white p-6 shadow-2xl">
+      {/* Toaster for Toast Notifications */}
+
       <h2 className="text-2xl font-bold text-gray-900 mb-4 text-center">Find Friends</h2>
       <p className="text-gray-600 text-center mb-6">
-        Discover and connect with new friends based on your mutual hobbies.
+        Discover and connect with new friends based on your mutual interests.
       </p>
 
       <Carousel className="max-w-[330px] md:max-w-md lg:max-w-xl xl:max-w-3xl mx-auto">
@@ -74,18 +67,18 @@ const FindFriends = () => {
               <Card className="max-w-sm w-full shadow-xl bg-gray-50 rounded-lg">
                 <CardContent className="flex flex-col items-center p-4 py-5">
                   <img
-                    src={profile.profilePic}
+                    src={profile.profilePicture || "https://via.placeholder.com/150"}
                     alt={`${profile.name}'s profile`}
                     className="w-24 h-24 rounded-full object-cover mb-4"
                   />
                   <h3 className="text-lg font-bold text-gray-800 mb-2">{profile.name}</h3>
                   <div className="flex gap-2 mb-4 flex-wrap justify-center">
-                    {profile.hobbies.map((hobby, index) => (
+                    {profile.commonInterests.map((interest, index) => (
                       <Badge
                         key={index}
                         className="text-white px-2 py-1 rounded-md text-xs font-medium"
                       >
-                        {hobby}
+                        {interest}
                       </Badge>
                     ))}
                   </div>
