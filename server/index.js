@@ -6,6 +6,7 @@ import dotenv from 'dotenv';
 import connectDB from './database/db.js';
 import User from './routes/User.route.js';
 import Department from './routes/department.route.js'
+import Friends from './routes/Friends.route.js';
 
 dotenv.config({});
 
@@ -29,6 +30,7 @@ app.use(cookieParser());
 app.use('/api/v1/LostAndFound', LostAndFound);
 app.use('/api/v1/user', User);
 app.use('/api/v1/department',Department);
+app.use('/api/v1/friends',Friends);
 
 
 app.get('/' , (req,res)=>{

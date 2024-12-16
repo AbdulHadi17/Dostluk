@@ -43,12 +43,13 @@ CREATE TABLE User (
 CREATE TABLE Friendship (
     User_ID_1 INT,
     User_ID_2 INT,
-    Status VARCHAR(50),
+    Status VARCHAR(50) DEFAULT 'Requested',
     Connected_since DATE,
     PRIMARY KEY (User_ID_1, User_ID_2),
     FOREIGN KEY (User_ID_1) REFERENCES User(User_ID),
     FOREIGN KEY (User_ID_2) REFERENCES User(User_ID)
 );
+
 
 -- Table for Interests
 CREATE TABLE Interests (
@@ -77,7 +78,7 @@ CREATE TABLE Chatroom (
     Created_on DATE,
     FOREIGN KEY (Created_by) REFERENCES User(User_ID),
     FOREIGN KEY (Type_ID) REFERENCES Chatroom_Type(Type_ID)
-);
+    );
 
 -- Table for Messages
 CREATE TABLE Message (
