@@ -1,0 +1,12 @@
+.popover-content {
+    z-index: 9999 !important; /* Make sure it renders above the dialog */
+    position: absolute;       /* Required to correctly position it */
+    pointer-events: auto;  
+    left: -130px;
+    top: -200px;   /* Ensure it can receive clicks */
+  }
+  
+  /* Prevent the dialog backdrop from blocking clicks */
+  .dialog-backdrop {
+    pointer-events: none;     /* Allow clicks to pass through */
+  }

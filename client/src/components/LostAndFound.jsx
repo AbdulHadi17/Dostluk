@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from "react";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs.jsx";
-import { Input } from "@/components/ui/input.jsx";
-import { Button } from "@/components/ui/button.jsx";
+import React, { useState, useEffect } from "react"
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
+import { Input } from "@/components/ui/input"
+import { Button } from "@/components/ui/button"
 import {
   Pagination,
   PaginationContent,
@@ -9,22 +9,26 @@ import {
   PaginationPrevious,
   PaginationNext,
   PaginationLink,
-} from "@/components/ui/pagination.jsx";
-import { Search } from "lucide-react";
+} from "@/components/ui/pagination"
+import { Search, Plus } from 'lucide-react'
+import { AddItemDialog } from "./AddItemDialog"
+import { ItemCard } from "./ItemCard"
 
 const LostAndFound = () => {
-  const [searchQuery, setSearchQuery] = useState("");
-  const [tab, setTab] = useState("lost");
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(3);
-
-  const items = [
+  const [searchQuery, setSearchQuery] = useState("")
+  const [tab, setTab] = useState("lost")
+  const [currentPage, setCurrentPage] = useState(1)
+  const [itemsPerPage, setItemsPerPage] = useState(6)
+  const [isAddItemDialogOpen, setIsAddItemDialogOpen] = useState(false)
+  const [items, setItems] = useState([
     {
       id: 1,
       type: "lost",
       title: "Lost Wallet",
       reportedBy: "Ali Khan",
       image: "https://via.placeholder.com/150/FF5733",
+      date: "2023-06-15",
+      description: "Brown leather wallet lost near the cafeteria.",
     },
     {
       id: 2,
@@ -32,116 +36,70 @@ const LostAndFound = () => {
       title: "Found Watch",
       reportedBy: "Ayesha Ahmed",
       image: "https://via.placeholder.com/150/33FF57",
+      date: "2023-06-14",
+      description: "Silver wristwatch found in the library.",
     },
-    {
-      id: 3,
-      type: "lost",
-      title: "Lost Keys",
-      reportedBy: "Bilal Siddiqui",
-      image: "https://via.placeholder.com/150/5733FF",
-    },
-    {
-      id: 4,
-      type: "lost",
-      title: "Lost Backpack",
-      reportedBy: "Zara Malik",
-      image: "https://via.placeholder.com/150/FF33A1",
-    },
-    {
-      id: 5,
-      type: "found",
-      title: "Found Glasses",
-      reportedBy: "Hamza Ali",
-      image: "https://via.placeholder.com/150/A1FF33",
-    },
-    {
-      id: 6,
-      type: "lost",
-      title: "Lost Umbrella",
-      reportedBy: "Sara Javed",
-      image: "https://via.placeholder.com/150/33A1FF",
-    },
-    {
-      id: 7,
-      type: "found",
-      title: "Found Notebook",
-      reportedBy: "Usman Raza",
-      image: "https://via.placeholder.com/150/FF5733",
-    },
-    {
-      id: 8,
-      type: "lost",
-      title: "Lost Headphones",
-      reportedBy: "Hina Nawaz",
-      image: "https://via.placeholder.com/150/33FF57",
-    },
-    {
-      id: 9,
-      type: "found",
-      title: "Found Phone Case",
-      reportedBy: "Farhan Iqbal",
-      image: "https://via.placeholder.com/150/5733FF",
-    },
-  ];
+    // ... (other items)
+  ])
 
   useEffect(() => {
     const calculateItemsPerPage = () => {
-      const viewportHeight = window.innerHeight;
-      const itemHeight = 200; // Approximate item height
-      const padding = 200; // Top and bottom padding
-      const items = Math.floor((viewportHeight - padding) / itemHeight);
-      setItemsPerPage(items > 0 ? items : 1);
-    };
+      const viewportWidth = window.innerWidth
+      if (viewportWidth >= 1024) {
+        setItemsPerPage(9)
+      } else if (viewportWidth >= 640) {
+        setItemsPerPage(6)
+      } else {
+        setItemsPerPage(3)
+      }
+    }
 
-    calculateItemsPerPage();
-    window.addEventListener("resize", calculateItemsPerPage);
+    calculateItemsPerPage()
+    window.addEventListener("resize", calculateItemsPerPage)
     return () => window.removeEventListener("resize", calculateItemsPerPage);
-  }, []);
+  }, [])
 
-  const filteredItems = items.filter(
-    (item) =>
-      item.type === tab &&
-      item.title.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredItems = items.filter((item) =>
+    item.type === tab &&
+    (item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      item.description.toLowerCase().includes(searchQuery.toLowerCase())))
 
-  const totalPages = Math.ceil(filteredItems.length / itemsPerPage);
-  const paginatedItems = filteredItems.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
+  const totalPages = Math.ceil(filteredItems.length / itemsPerPage)
+  const paginatedItems = filteredItems.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
 
   const handlePageChange = (page) => {
     if (page >= 1 && page <= totalPages) {
-      setCurrentPage(page);
+      setCurrentPage(page)
     }
-  };
+  }
 
-  const handleChat = (user) => {
-    alert(`Opening chat with ${user}`);
-  };
+  const handleAddItem = (newItem) => {
+    setItems([...items, { ...newItem, id: items.length + 1 }])
+    setIsAddItemDialogOpen(false)
+  }
 
   const renderPaginationItems = () => {
-    const pageNumbers = [];
-    const maxPagesToShow = 5;
+    const pageNumbers = []
+    const maxPagesToShow = 5
 
     if (totalPages <= maxPagesToShow) {
       for (let i = 1; i <= totalPages; i++) {
-        pageNumbers.push(i);
+        pageNumbers.push(i)
       }
     } else {
       if (currentPage > 2) {
-        pageNumbers.push(1, "...");
+        pageNumbers.push(1, "...")
       }
 
-      const start = Math.max(2, currentPage - 1);
-      const end = Math.min(totalPages - 1, currentPage + 1);
+      const start = Math.max(2, currentPage - 1)
+      const end = Math.min(totalPages - 1, currentPage + 1)
 
       for (let i = start; i <= end; i++) {
-        pageNumbers.push(i);
+        pageNumbers.push(i)
       }
 
       if (currentPage < totalPages - 1) {
-        pageNumbers.push("...", totalPages);
+        pageNumbers.push("...", totalPages)
       }
     }
 
@@ -155,157 +113,99 @@ const LostAndFound = () => {
           <PaginationLink
             href="#"
             className={currentPage === page ? "font-bold" : ""}
-            onClick={() => handlePageChange(page)}
-          >
+            onClick={() => handlePageChange(page)}>
             {page}
           </PaginationLink>
         </PaginationItem>
-      )
-    );
-  };
+      ));
+  }
 
   return (
-    <div className="h-full bg-gray-100 py-4 px-2">
-      <div className="max-w-screen-lg mx-auto bg-white shadow-lg rounded-md p-4 sm:p-6">
-        <h2 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6 text-center">
-          Lost and Found
-        </h2>
+    (<div className="min-h-screen bg-gray-100 py-8 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto">
+        <div className="bg-white shadow-xl rounded-lg overflow-hidden">
+          <div className="p-6 sm:p-10">
+            <div className="flex justify-between items-center mb-8">
+              <h2 className="text-3xl font-bold text-gray-900">Lost and Found</h2>
+              <Button onClick={() => setIsAddItemDialogOpen(true)}>
+                <Plus className="w-4 h-4 mr-2" />
+                Add Item
+              </Button>
+            </div>
 
-        {/* Tabs */}
-        <Tabs
-          defaultValue="lost"
-          onValueChange={(value) => {
-            setTab(value);
-            setCurrentPage(1);
-          }}
-        >
-          <TabsList className="mb-4 flex flex-wrap justify-center">
-            <TabsTrigger value="lost">Lost Items</TabsTrigger>
-            <TabsTrigger value="found">Found Items</TabsTrigger>
-          </TabsList>
+            <Tabs
+              defaultValue="lost"
+              onValueChange={(value) => {
+                setTab(value)
+                setCurrentPage(1)
+              }}
+              className="mb-8">
+              <TabsList className="grid w-full grid-cols-2 mb-8">
+                <TabsTrigger value="lost">Lost Items</TabsTrigger>
+                <TabsTrigger value="found">Found Items</TabsTrigger>
+              </TabsList>
 
-          {/* Search Bar */}
-          <div className="flex items-center gap-2 mb-6 w-full">
-            <Input
-              placeholder={`Search for ${tab} items...`}
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="flex-1"
-            />
-            <Button className="flex-none">
-              <Search className="w-4 h-4" />
-            </Button>
+              <div className="flex items-center gap-4 mb-8">
+                <Input
+                  placeholder={`Search for ${tab} items...`}
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="flex-1" />
+                <Button>
+                  <Search className="w-4 h-4" />
+                </Button>
+              </div>
+
+              <TabsContent value="lost">
+                <ItemGrid items={paginatedItems} />
+              </TabsContent>
+
+              <TabsContent value="found">
+                <ItemGrid items={paginatedItems} />
+              </TabsContent>
+            </Tabs>
+
+            <Pagination>
+              <PaginationContent>
+                <PaginationItem>
+                  <PaginationPrevious
+                    href="#"
+                    onClick={() => handlePageChange(currentPage - 1)}
+                    disabled={currentPage === 1} />
+                </PaginationItem>
+                {renderPaginationItems()}
+                <PaginationItem>
+                  <PaginationNext
+                    href="#"
+                    onClick={() => handlePageChange(currentPage + 1)}
+                    disabled={currentPage === totalPages} />
+                </PaginationItem>
+              </PaginationContent>
+            </Pagination>
           </div>
-
-          {/* Tab Content for Lost Items */}
-          <TabsContent value="lost">
-            {paginatedItems.length > 0 ? (
-              <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-                {paginatedItems.map((item) => (
-                  <div
-                    key={item.id}
-                    className="bg-gray-100 p-4 rounded-md shadow-md"
-                  >
-                    <img
-                      src={item.image}
-                      alt={item.title}
-                      className="w-full h-32 object-cover rounded-md mb-2"
-                    />
-                    <h3 className="text-lg font-semibold">{item.title}</h3>
-                    <p className="text-sm text-gray-500">
-                      Reported by: {item.reportedBy}
-                    </p>
-                    <Button
-                      onClick={() => handleChat(item.reportedBy)}
-                      className="mt-3 w-full"
-                    >
-                      Chat with {item.reportedBy}
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-gray-500 text-center">No items found.</p>
-            )}
-
-            {/* Pagination */}
-            <Pagination>
-              <PaginationContent>
-                <PaginationItem>
-                  <PaginationPrevious
-                    href="#"
-                    onClick={() => handlePageChange(currentPage - 1)}
-                    disabled={currentPage === 1}
-                  />
-                </PaginationItem>
-                {renderPaginationItems()}
-                <PaginationItem>
-                  <PaginationNext
-                    href="#"
-                    onClick={() => handlePageChange(currentPage + 1)}
-                    disabled={currentPage === totalPages}
-                  />
-                </PaginationItem>
-              </PaginationContent>
-            </Pagination>
-          </TabsContent>
-
-          {/* Tab Content for Found Items */}
-          <TabsContent value="found">
-            {paginatedItems.length > 0 ? (
-              <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-                {paginatedItems.map((item) => (
-                  <div
-                    key={item.id}
-                    className="bg-gray-100 p-4 rounded-md shadow-md"
-                  >
-                    <img
-                      src={item.image}
-                      alt={item.title}
-                      className="w-full h-32 object-cover rounded-md mb-2"
-                    />
-                    <h3 className="text-lg font-semibold">{item.title}</h3>
-                    <p className="text-sm text-gray-500">
-                      Reported by: {item.reportedBy}
-                    </p>
-                    <Button
-                      onClick={() => handleChat(item.reportedBy)}
-                      className="mt-3 w-full"
-                    >
-                      Chat with {item.reportedBy}
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-gray-500 text-center">No items found.</p>
-            )}
-
-            {/* Pagination */}
-            <Pagination>
-              <PaginationContent>
-                <PaginationItem>
-                  <PaginationPrevious
-                    href="#"
-                    onClick={() => handlePageChange(currentPage - 1)}
-                    disabled={currentPage === 1}
-                  />
-                </PaginationItem>
-                {renderPaginationItems()}
-                <PaginationItem>
-                  <PaginationNext
-                    href="#"
-                    onClick={() => handlePageChange(currentPage + 1)}
-                    disabled={currentPage === totalPages}
-                  />
-                </PaginationItem>
-              </PaginationContent>
-            </Pagination>
-          </TabsContent>
-        </Tabs>
+        </div>
       </div>
-    </div>
+      <AddItemDialog
+        isOpen={isAddItemDialogOpen}
+        onClose={() => setIsAddItemDialogOpen(false)}
+        onAddItem={handleAddItem} />
+    </div>)
   );
-};
+}
 
-export default LostAndFound;
+const ItemGrid = ({
+  items
+}) => {
+  return items.length > 0 ? (
+    <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+      {items.map((item) => (
+        <ItemCard key={item.id} item={item} />
+      ))}
+    </div>
+  ) : (
+    <p className="text-gray-500 text-center">No items found.</p>
+  );
+}
+
+export default LostAndFound
+

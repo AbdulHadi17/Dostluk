@@ -28,6 +28,7 @@ CREATE TABLE Chatroom_Type (
     Type_name VARCHAR(50) NOT NULL UNIQUE
 );
 
+
 -- Table for Users
 CREATE TABLE User (
     User_ID INT PRIMARY KEY AUTO_INCREMENT,
@@ -109,6 +110,7 @@ CREATE TABLE Lost_And_Found_Item (
     Item_ID INT PRIMARY KEY AUTO_INCREMENT,
     Item_name VARCHAR(255) NOT NULL,
     Description TEXT,
+    Item_Picture VARCHAR(255), -- File path or URL for the item's picture
     Status_ID INT,
     Reported_By_User INT,
     Reported_Date DATE,

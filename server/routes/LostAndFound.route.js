@@ -1,9 +1,11 @@
 import express from 'express';
-import { getData } from '../controllers/LostAndFound.controller.js';
+import {getLostAndFoundItems } from '../controllers/LostAndFound.controller.js';
+import isAuthenticated from '../middlewares/isAuthenticated.js';
+
 
 const Router = express.Router();
 
-Router.route('/getData').get(getData);
+Router.route('/getLostAndFoundItems').get(isAuthenticated,getLostAndFoundItems);
 
 
 
