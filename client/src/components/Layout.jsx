@@ -2,10 +2,14 @@ import React, { useState, useEffect } from "react";
 import Sidebar from "./Sidebar";
 import { Outlet } from "react-router-dom";
 import { Plus } from "lucide-react";
+import Cookies from "universal-cookie";
+
 
 const Layout = () => {
   const [isSidebarVisible, setIsSidebarVisible] = useState(false);
-
+  
+  const cookies = new Cookies();
+  const profilePicture = cookies.get("profilePicture");
   // Close the sidebar on screen resize
   useEffect(() => {
     const handleResize = () => {
@@ -23,6 +27,7 @@ const Layout = () => {
       <Sidebar
         isSidebarVisible={isSidebarVisible}
         setIsSidebarVisible={setIsSidebarVisible}
+        profilePicture={profilePicture}
       />
 
       {/* Main Content */}

@@ -1,34 +1,27 @@
 import React from "react";
-import { User, Search, MessageCircle, LogOut, Box } from "lucide-react";
+import { User, Search, MessageCircle, LogOut, Box, MessageSquare } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import DostlukLogo from "@/assets/dostluksvg.svg";
 import axios from "axios";
-import { toast } from "sonner"; // Path to the logo
+import { toast } from "sonner";
 
-const Sidebar = ({ isSidebarVisible, setIsSidebarVisible }) => {
+const Sidebar = ({ isSidebarVisible, setIsSidebarVisible, profilePicture }) => {
   const navigate = useNavigate();
 
+  const handleLogout = async () => {
+    try {
+      const response = await axios.get("http://localhost:3000/api/v1/user/logout", {
+        withCredentials: true,
+      });
 
-const handleLogout =async ()=>{
-  
-  try {
-    
-    const response = await axios.get('http://localhost:3000/api/v1/user/logout' , {withCredentials:true});
-
-    if(response.data.success){
-      toast.success(response.data.message);
-      navigate('/')
+      if (response.data.success) {
+        toast.success(response.data.message);
+        navigate("/");
+      }
+    } catch (error) {
+      console.log(error);
     }
-    
-
-
-  } catch (error) {
-    console.log(error);
-    
-  }
-
-  
-}
+  };
 
   return (
     <aside
@@ -60,8 +53,16 @@ const handleLogout =async ()=>{
           onClick={() => navigate("/home/userprofile")}
           className="flex items-center space-x-4 p-3 rounded-lg cursor-pointer hover:bg-[#48E5C2] hover:text-[#333333] transition"
         >
-          <div className="w-12 h-12 bg-[#FCFAF9] text-[#333333] rounded-full flex justify-center items-center">
-            <User className="w-6 h-6" />
+          <div className="w-12 h-12 bg-[#FCFAF9] text-[#333333] rounded-full flex justify-center items-center overflow-hidden">
+            {profilePicture ? (
+              <img
+                src={profilePicture}
+                alt="User Profile"
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <User className="w-6 h-6 text-[#333333]" />
+            )}
           </div>
           <div>
             <p className="text-lg font-semibold">You</p>
@@ -98,7 +99,16 @@ const handleLogout =async ()=>{
             className="flex items-center space-x-4 p-3 rounded-lg cursor-pointer hover:bg-[#48E5C2] hover:text-[#333333] transition"
           >
             <MessageCircle className="w-6 h-6" />
-            <span className="font-semibold">Chat</span>
+            <span className="font-semibold">Chat with friends</span>
+          </div>
+
+          {/* Chatroom */}
+          <div
+            onClick={() => navigate("/home/chatrooms")}
+            className="flex items-center space-x-4 p-3 rounded-lg cursor-pointer hover:bg-[#48E5C2] hover:text-[#333333] transition"
+          >
+            <MessageSquare className="w-6 h-6" />
+            <span className="font-semibold">View Chatrooms</span>
           </div>
         </nav>
       </div>

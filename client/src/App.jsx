@@ -11,6 +11,7 @@ import UserProfile from './components/UserProfile'
 import LostAndFound from './components/LostAndFound'
 import Chat from './components/Chat'
 import FindFriends from './components/FindFriends'
+import Chatroom from './components/Chatroom'
 
 function App() {
  
@@ -28,6 +29,7 @@ function App() {
           <Route path="lostandfound" element={<LostAndFound />} />
           <Route path="chat" element={<Chat />} />
           <Route path="findfriends" element={<FindFriends />} />
+          <Route path="chatrooms" element={<Chatroom />} />
         </Route>
     </Routes>
     </> 
