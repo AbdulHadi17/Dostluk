@@ -46,7 +46,7 @@ const UserProfile = () => {
         setOriginalData(userData); // Save the original data
 
         // Fetch categories and interests
-        const categoriesResponse = await axios.get('http://localhost:3000/api/v1/user/getCategoriesAndInterests',{
+        const categoriesResponse = await axios.get('http://localhost:3000/api/v1/categoriesAndInterests/getCategoriesAndInterests',{
           headers:{
             'Content-Type':'application/json'
         },

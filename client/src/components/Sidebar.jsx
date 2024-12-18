@@ -108,7 +108,7 @@ const Sidebar = ({ isSidebarVisible, setIsSidebarVisible, profilePicture }) => {
             className="flex items-center space-x-4 p-3 rounded-lg cursor-pointer hover:bg-[#48E5C2] hover:text-[#333333] transition"
           >
             <MessageSquare className="w-6 h-6" />
-            <span className="font-semibold">View Chatrooms</span>
+            <span className="font-semibold">Join Chatrooms</span>
           </div>
         </nav>
       </div>

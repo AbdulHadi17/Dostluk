@@ -105,6 +105,14 @@ CREATE TABLE Chatroom_Participants (
     FOREIGN KEY (Role_ID) REFERENCES Role(Role_ID)
 );
 
+CREATE TABLE Chatroom_Interests (
+    Chatroom_ID INT,
+    Interests_ID INT,
+    PRIMARY KEY (Chatroom_ID, Interests_ID),
+    FOREIGN KEY (Chatroom_ID) REFERENCES Chatroom(Chatroom_ID),
+    FOREIGN KEY (Interests_ID) REFERENCES Interests(Interests_ID)
+);
+
 -- Table for Lost and Found Items
 CREATE TABLE Lost_And_Found_Item (
     Item_ID INT PRIMARY KEY AUTO_INCREMENT,

@@ -8,6 +8,7 @@ import User from './routes/User.route.js';
 import Department from './routes/department.route.js'
 import Friends from './routes/Friends.route.js';
 import Chatrooms from './routes/Chatroom.route.js';
+import CategoriesAndInterests from './routes/categoriesAndInterests.route.js';
 
 dotenv.config({});
 
@@ -33,6 +34,7 @@ app.use('/api/v1/user', User);
 app.use('/api/v1/department',Department);
 app.use('/api/v1/friends',Friends);
 app.use('/api/v1/chatrooms',Chatrooms);
+app.use('/api/v1/categoriesAndInterests',CategoriesAndInterests);
 
 
 app.get('/' , (req,res)=>{
