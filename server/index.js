@@ -7,6 +7,7 @@ import connectDB from './database/db.js';
 import User from './routes/User.route.js';
 import Department from './routes/department.route.js'
 import Friends from './routes/Friends.route.js';
+import Chatrooms from './routes/Chatroom.route.js';
 
 dotenv.config({});
 
@@ -31,6 +32,7 @@ app.use('/api/v1/LostAndFound', LostAndFound);
 app.use('/api/v1/user', User);
 app.use('/api/v1/department',Department);
 app.use('/api/v1/friends',Friends);
+app.use('/api/v1/chatrooms',Chatrooms);
 
 
 app.get('/' , (req,res)=>{

@@ -11,7 +11,7 @@ import UserProfile from './components/UserProfile'
 import LostAndFound from './components/LostAndFound'
 import Chat from './components/Chat'
 import FindFriends from './components/FindFriends'
-import Chatroom from './components/Chatroom'
+import Chatroom from './components/page'
 
 function App() {
  

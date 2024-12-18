@@ -1,10 +1,12 @@
-import React, { useState } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
-import { Plus } from 'lucide-react'
+"'use client'"
+
+import React, { useState } from "'react'"
+import { motion, AnimatePresence } from "'framer-motion'"
+import { Plus } from "'lucide-react'"
 import { Button } from "@/components/ui/button"
-import { ChatroomCard } from './ChatroomCard'
-import { CreateChatroomModal } from './CreateChatroomModal'
-import { SearchInput } from './SearchInput'
+import { ChatroomCard } from "'./ChatroomCard'"
+import { CreateChatroomModal } from "'./CreateChatroomModal'"
+import { SearchInput } from "'./SearchInput'"
 import {
   Pagination,
   PaginationContent,
@@ -12,40 +14,73 @@ import {
   PaginationLink,
   PaginationNext,
   PaginationPrevious,
-} from "@/components/ui/pagination";
+} from "@/components/ui/pagination"
 
 const sampleChatrooms = [
   {
-    id: "1",
-    title: "React Enthusiasts",
-    description: "Discuss all things React and frontend development",
-    tags: ["React", "Frontend"],
+    id: "'1'",
+    title: "'React Enthusiasts'",
+    description: "'Discuss all things React and frontend development'",
+    tags: ["'React'", "'Frontend'"],
     members: [
-      { name: "Alice", avatar: "/placeholder.svg?height=32&width=32" },
-      { name: "Bob", avatar: "/placeholder.svg?height=32&width=32" },
-      { name: "Charlie", avatar: "/placeholder.svg?height=32&width=32" },
+      { name: "'Alice'", avatar: "'/placeholder.svg?height=32&width=32'" },
+      { name: "'Bob'", avatar: "'/placeholder.svg?height=32&width=32'" },
+      { name: "'Charlie'", avatar: "'/placeholder.svg?height=32&width=32'" },
     ],
     isPublic: true,
   },
   {
-    id: "2",
-    title: "Node.js Ninjas",
-    description: "Backend development with Node.js",
-    tags: ["Node.js", "Backend"],
+    id: "'2'",
+    title: "'Node.js Ninjas'",
+    description: "'Backend development with Node.js'",
+    tags: ["'Node.js'", "'Backend'"],
     members: [
-      { name: "David", avatar: "/placeholder.svg?height=32&width=32" },
-      { name: "Eve", avatar: "/placeholder.svg?height=32&width=32" },
+      { name: "'David'", avatar: "'/placeholder.svg?height=32&width=32'" },
+      { name: "'Eve'", avatar: "'/placeholder.svg?height=32&width=32'" },
     ],
     isPublic: true,
   },
-];
+  {
+    id: "'3'",
+    title: "'Python Pioneers'",
+    description: "'Explore the world of Python programming'",
+    tags: ["'Python'", "'Programming'"],
+    members: [
+      { name: "'Frank'", avatar: "'/placeholder.svg?height=32&width=32'" },
+      { name: "'Grace'", avatar: "'/placeholder.svg?height=32&width=32'" },
+    ],
+    isPublic: true,
+  },
+  {
+    id: "'4'",
+    title: "'UI/UX United'",
+    description: "'Discuss user interface and experience design'",
+    tags: ["'UI'", "'UX'"],
+    members: [
+      { name: "'Henry'", avatar: "'/placeholder.svg?height=32&width=32'" },
+      { name: "'Ivy'", avatar: "'/placeholder.svg?height=32&width=32'" },
+    ],
+    isPublic: true,
+  },
+  {
+    id: "'5'",
+    title: "'Data Science Explorers'",
+    description: "'Dive into data analysis and machine learning'",
+    tags: ["'Data Science'", "'ML'"],
+    members: [
+      { name: "'Jack'", avatar: "'/placeholder.svg?height=32&width=32'" },
+      { name: "'Kate'", avatar: "'/placeholder.svg?height=32&width=32'" },
+    ],
+    isPublic: true,
+  },
+]
 
 const ITEMS_PER_PAGE = 6
 
-export function Chatroom() {
+export default function ChatroomList() {
   const [chatrooms, setChatrooms] = useState(sampleChatrooms)
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
-  const [searchQuery, setSearchQuery] = useState('')
+  const [searchQuery, setSearchQuery] = useState("''")
   const [currentPage, setCurrentPage] = useState(1)
 
   const filteredChatrooms = chatrooms.filter(room =>
@@ -98,7 +133,7 @@ export function Chatroom() {
             <PaginationItem>
               <PaginationPrevious
                 onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                className={currentPage === 1 ? 'pointer-events-none opacity-50' : ''} />
+                className={currentPage === 1 ? "'pointer-events-none opacity-50'" : "''"} />
             </PaginationItem>
             {[...Array(totalPages)].map((_, index) => (
               <PaginationItem key={index}>
@@ -112,7 +147,7 @@ export function Chatroom() {
             <PaginationItem>
               <PaginationNext
                 onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                className={currentPage === totalPages ? 'pointer-events-none opacity-50' : ''} />
+                className={currentPage === totalPages ? "'pointer-events-none opacity-50'" : "''"} />
             </PaginationItem>
           </PaginationContent>
         </Pagination>
