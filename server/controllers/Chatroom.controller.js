@@ -155,3 +155,69 @@ export const joinChatroom = async (req, res) => {
         });
     }
 };
+
+export const suggestedChatrooms = async (req, res) => {
+    const userId = req.id; // Get user_id from the request
+
+    try {
+        const db = await connectDB();
+
+        // Step 1: Get the user's interests and their categories
+        const [userInterests] = await db.promise().execute(
+            `SELECT DISTINCT i.Category_ID 
+             FROM User_Interests ui
+             JOIN Interests i ON ui.Interests_ID = i.Interests_ID
+             WHERE ui.User_ID = ?`,
+            [userId]
+        );
+
+        const userCategories = userInterests.map(row => row.Category_ID);
+        console.log('hadi ' + userCategories)
+        if (userCategories.length === 0) {
+            return res.status(200).json({ chatrooms: [] , message:'User has no interests' });
+        }
+
+
+        const placeholders = userCategories.map(() => '?').join(', ');
+        console.log(placeholders);
+        // Step 2: Get chatrooms matching the same category and type_id = 3
+        const [chatrooms] = await db.promise().execute(
+            `SELECT c.Chatroom_ID, c.Name, c.Description, 
+                    MAX(p.username) AS friendName, MAX(p.profilePicture) AS friendProfile,
+                    GROUP_CONCAT(DISTINCT i.Interest_Name) AS interests
+             FROM Chatroom c
+             JOIN Chatroom_Interests ci ON c.Chatroom_ID = ci.Chatroom_ID
+             JOIN Interests i ON ci.Interests_ID = i.Interests_ID
+             LEFT JOIN Chatroom_Participants cp ON c.Chatroom_ID = cp.Chatroom_ID
+             LEFT JOIN Friendship f ON (f.User_ID_1 = ? AND f.User_ID_2 = cp.User_ID)
+             LEFT JOIN User p ON p.User_ID = cp.User_ID
+             WHERE i.Category_ID IN (${placeholders})
+               AND c.Type_ID = 3
+               AND c.Chatroom_ID NOT IN (
+                   SELECT Chatroom_ID 
+                   FROM Chatroom_Participants
+                   WHERE User_ID = ?
+               )
+             GROUP BY c.Chatroom_ID, c.Name, c.Description`,
+            [userId, ...userCategories, userId]
+        );
+console.log(chatrooms)
+console.log(1)
+        // Step 3: Format the response
+        const formattedChatrooms = Object.values(chatrooms).map(chatroom => ({
+            chatroomId: chatroom.Chatroom_ID,
+            name: chatroom.Name,
+            description: chatroom.Description,
+            friendName: chatroom.friendName,
+            friendProfile: chatroom.friendProfile,
+            interests: chatroom.interests ? chatroom.interests.split(",") : []
+        }));
+
+        console.log('Hadi '+ formattedChatrooms);
+        
+        res.status(200).json({ chatrooms: formattedChatrooms  , success:true});
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: "Internal Server Error" , success:false});
+    }
+};

@@ -1,10 +1,10 @@
-import React, { useState } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
-import { Plus } from 'lucide-react'
-import { Button } from "@/components/ui/button"
-import { ChatroomCard } from './ChatroomCard'
-import { CreateChatroomModal } from './CreateChatroomModal'
-import { SearchInput } from './SearchInput'
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Plus } from 'lucide-react';
+import { Button } from "@/components/ui/button";
+import { ChatroomCard } from './ChatroomCard';
+import { CreateChatroomModal } from './CreateChatroomModal';
+import { SearchInput } from './SearchInput';
 import {
   Pagination,
   PaginationContent,
@@ -13,57 +13,79 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
+import axios from 'axios';
+import { toast } from 'sonner';
 
-const sampleChatrooms = [
-  {
-    id: "1",
-    title: "React Enthusiasts",
-    description: "Discuss all things React and frontend development",
-    tags: ["React", "Frontend"],
-    members: [
-      { name: "Alice", avatar: "/placeholder.svg?height=32&width=32" },
-      { name: "Bob", avatar: "/placeholder.svg?height=32&width=32" },
-      { name: "Charlie", avatar: "/placeholder.svg?height=32&width=32" },
-    ],
-    isPublic: true,
-  },
-  {
-    id: "2",
-    title: "Node.js Ninjas",
-    description: "Backend development with Node.js",
-    tags: ["Node.js", "Backend"],
-    members: [
-      { name: "David", avatar: "/placeholder.svg?height=32&width=32" },
-      { name: "Eve", avatar: "/placeholder.svg?height=32&width=32" },
-    ],
-    isPublic: true,
-  },
-];
-
-const ITEMS_PER_PAGE = 6
+const ITEMS_PER_PAGE = 6;
 
 export function Chatroom() {
-  const [chatrooms, setChatrooms] = useState(sampleChatrooms)
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
-  const [searchQuery, setSearchQuery] = useState('')
-  const [currentPage, setCurrentPage] = useState(1)
+  const [chatrooms, setChatrooms] = useState([]);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [loading, setLoading] = useState(false);
+  useEffect(() => {
+    const fetchChatrooms = async () => {
+      setLoading(true);
+      try {
+        const response = await axios.get('http://localhost:3000/api/v1/chatrooms/suggestedChatrooms', { withCredentials: true });
+        const { data } = response;
+  
+        if (data.success && Array.isArray(data.chatrooms)) {
+          const formattedChatrooms = data.chatrooms.map(room => ({
+            name: room.name || '', // Use the name directly
+            description: room.description || '', // Use description directly
+            type_id: room.type_id || '', // Use type_id for unique ID
+            interests: Array.isArray(room.interests) ? room.interests : [], // Ensure interests is an array
+            members: [], // Default to empty array as members aren't provided
+            isPublic: true, // Assume public if not provided
+            friendProfile: '/default-avatar.png', // Default profile picture
+          }));
+          setChatrooms(formattedChatrooms);
+        } else {
+          throw new Error('Invalid response format');
+        }
+      } catch (error) {
+        console.error(error.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+  
+    fetchChatrooms();
+  }, []);
+  
+  const filteredChatrooms = chatrooms.filter(room => {
+    const title = room.title || ''; // Default to empty string if undefined
+    const description = room.description || ''; // Default to empty string if undefined
+    const tags = Array.isArray(room.tags) ? room.tags : []; // Ensure tags is an array
 
-  const filteredChatrooms = chatrooms.filter(room =>
-    room.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    room.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    room.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase())))
+    return (
+      title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      tags.some(tag => typeof tag === 'string' && tag.toLowerCase().includes(searchQuery.toLowerCase()))
+    );
+  });
 
-  const totalPages = Math.ceil(filteredChatrooms.length / ITEMS_PER_PAGE)
-  const paginatedChatrooms = filteredChatrooms.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE)
+  const totalPages = Math.ceil(filteredChatrooms.length / ITEMS_PER_PAGE);
+  const paginatedChatrooms = filteredChatrooms.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
 
   const handleCreateChatroom = (newChatroom) => {
-    const id = (chatrooms.length + 1).toString()
-    setChatrooms([...chatrooms, { ...newChatroom, id, members: [] }])
-    setIsCreateModalOpen(false)
+    const id = (chatrooms.length + 1).toString();
+    setChatrooms([...chatrooms, { ...newChatroom, id, members: [] }]);
+    setIsCreateModalOpen(false);
+    toast.success('Chatroom created successfully!');
+  };
+
+  if (loading) {
+    return <div>Loading...</div>;
   }
 
   return (
-    (<div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100 p-6">
+    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100 p-6">
       <motion.h2
         className="text-3xl font-bold mb-6 text-slate-800"
         initial={{ opacity: 0, y: -20 }}
@@ -121,7 +143,6 @@ export function Chatroom() {
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
         onCreate={handleCreateChatroom} />
-    </div>)
+    </div>
   );
 }
-
