@@ -75,7 +75,6 @@ const Sidebar = ({ isSidebarVisible, setIsSidebarVisible, profilePicture }) => {
 
         {/* Navigation Options */}
         <nav className="space-y-4">
-
           {/* Find Friends */}
           <div
             onClick={() => navigate("/home/findfriends")}
@@ -102,8 +101,6 @@ const Sidebar = ({ isSidebarVisible, setIsSidebarVisible, profilePicture }) => {
             <MessageSquare className="w-6 h-6" />
             <span className="font-semibold">Join Chatrooms</span>
           </div>
-        </nav>
-      </div>
 
           {/* Lost and Found */}
           <div
@@ -113,6 +110,9 @@ const Sidebar = ({ isSidebarVisible, setIsSidebarVisible, profilePicture }) => {
             <Box className="w-6 h-6" />
             <span className="font-semibold">Lost & Found</span>
           </div>
+        </nav>
+      </div>
+
       {/* Footer Section */}
       <div>
         {/* Separator */}
