@@ -12,6 +12,7 @@ import LostAndFound from './components/LostAndFound'
 import Chat from './components/Chat'
 import FindFriends from './components/FindFriends'
 import Chatroom from './components/page'
+import NotFound from './components/NotFound'
 
 function App() {
  
@@ -31,6 +32,8 @@ function App() {
           <Route path="findfriends" element={<FindFriends />} />
           <Route path="chatrooms" element={<Chatroom />} />
         </Route>
+
+    <Route path="*" element={<NotFound />} />
     </Routes>
     </> 
   )

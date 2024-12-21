@@ -75,14 +75,6 @@ const Sidebar = ({ isSidebarVisible, setIsSidebarVisible, profilePicture }) => {
 
         {/* Navigation Options */}
         <nav className="space-y-4">
-          {/* Lost and Found */}
-          <div
-            onClick={() => navigate("/home/lostandfound")}
-            className="flex items-center space-x-4 p-3 rounded-lg cursor-pointer hover:bg-[#48E5C2] hover:text-[#333333] transition"
-          >
-            <Box className="w-6 h-6" />
-            <span className="font-semibold">Lost & Found</span>
-          </div>
 
           {/* Find Friends */}
           <div
@@ -113,6 +105,14 @@ const Sidebar = ({ isSidebarVisible, setIsSidebarVisible, profilePicture }) => {
         </nav>
       </div>
 
+          {/* Lost and Found */}
+          <div
+            onClick={() => navigate("/home/lostandfound")}
+            className="flex items-center space-x-4 p-3 rounded-lg cursor-pointer hover:bg-[#48E5C2] hover:text-[#333333] transition"
+          >
+            <Box className="w-6 h-6" />
+            <span className="font-semibold">Lost & Found</span>
+          </div>
       {/* Footer Section */}
       <div>
         {/* Separator */}
