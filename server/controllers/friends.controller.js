@@ -138,6 +138,49 @@ export const findFriends = async (req, res) => {
     }
 };
 
-  
-  
+export const getFriends = async (req, res) => {
+  const userId = req.id; // Extracting user ID from the request
+
+  const db = await connectDB();
+  try {
+      // Query to get friends and their last message
+      const [friends] = await db.promise().execute(
+          `SELECT 
+          CASE
+              WHEN f.User_ID_1 = ? THEN f.User_ID_2
+              ELSE f.User_ID_1
+          END AS friendId,
+          u.Username AS name,
+          COALESCE(m.Content, 'No messages yet') AS lastMessage,
+          CASE 
+              WHEN m.Content IS NULL THEN '-' 
+              WHEN m.Sender_ID = ? THEN 'You' 
+              ELSE u.Username 
+          END AS lastSender
+      FROM Friendship f
+      JOIN User u ON u.User_ID = (CASE WHEN f.User_ID_1 = ? THEN f.User_ID_2 ELSE f.User_ID_1 END)
+      LEFT JOIN Message m ON (m.Sender_ID = u.User_ID OR m.Sender_ID = ?) 
+          AND m.Timestamp = (
+              SELECT MAX(Timestamp)
+              FROM Message
+              WHERE (Sender_ID = u.User_ID OR Sender_ID = ?)
+          )
+      WHERE (f.User_ID_1 = ? OR f.User_ID_2 = ?) AND f.Status = 'Connected';`,
+          [userId, userId, userId, userId, userId, userId, userId]
+      );
+
+      // Formatting the response
+      const friendsList = friends.map((friend) => ({
+          id: friend.friendId,
+          name: friend.name,
+          lastMessage: friend.lastMessage || "No messages yet",
+          lastSender: friend.lastSender || "-",
+      }));
+
+      return res.status(200).json({friendsList , success:true});
+  } catch (error) {
+      console.error("Error fetching friends list:", error);
+      return res.status(500).json({ error: "Internal Server Error" , success:false });
+  }
+};
   

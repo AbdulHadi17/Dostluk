@@ -28,7 +28,6 @@ CREATE TABLE Chatroom_Type (
     Type_name VARCHAR(50) NOT NULL UNIQUE
 );
 
-
 -- Table for Users
 CREATE TABLE User (
     User_ID INT PRIMARY KEY AUTO_INCREMENT,
@@ -37,7 +36,7 @@ CREATE TABLE User (
     Password VARCHAR(255) NOT NULL,
     Dept_ID INT,
     Joined_on DATE,
-    FOREIGN KEY (Dept_ID) REFERENCES Department(Department_ID)
+    FOREIGN KEY (Dept_ID) REFERENCES Department(Department_ID) ON DELETE CASCADE
 );
 
 -- Table for Friendships
@@ -47,17 +46,16 @@ CREATE TABLE Friendship (
     Status VARCHAR(50) DEFAULT 'Requested',
     Connected_since DATE,
     PRIMARY KEY (User_ID_1, User_ID_2),
-    FOREIGN KEY (User_ID_1) REFERENCES User(User_ID),
-    FOREIGN KEY (User_ID_2) REFERENCES User(User_ID)
+    FOREIGN KEY (User_ID_1) REFERENCES User(User_ID) ON DELETE CASCADE,
+    FOREIGN KEY (User_ID_2) REFERENCES User(User_ID) ON DELETE CASCADE
 );
-
 
 -- Table for Interests
 CREATE TABLE Interests (
     Interests_ID INT PRIMARY KEY AUTO_INCREMENT,
     Category_ID INT,
     Interest_name VARCHAR(255) NOT NULL,
-    FOREIGN KEY (Category_ID) REFERENCES Category(Category_ID)
+    FOREIGN KEY (Category_ID) REFERENCES Category(Category_ID) ON DELETE CASCADE
 );
 
 -- Table for User Interests
@@ -65,8 +63,8 @@ CREATE TABLE User_Interests (
     User_ID INT,
     Interests_ID INT,
     PRIMARY KEY (User_ID, Interests_ID),
-    FOREIGN KEY (User_ID) REFERENCES User(User_ID),
-    FOREIGN KEY (Interests_ID) REFERENCES Interests(Interests_ID)
+    FOREIGN KEY (User_ID) REFERENCES User(User_ID) ON DELETE CASCADE,
+    FOREIGN KEY (Interests_ID) REFERENCES Interests(Interests_ID) ON DELETE CASCADE
 );
 
 -- Table for Chatrooms
@@ -77,9 +75,9 @@ CREATE TABLE Chatroom (
     Description TEXT,
     Created_by INT,
     Created_on DATE,
-    FOREIGN KEY (Created_by) REFERENCES User(User_ID),
-    FOREIGN KEY (Type_ID) REFERENCES Chatroom_Type(Type_ID)
-    );
+    FOREIGN KEY (Created_by) REFERENCES User(User_ID) ON DELETE CASCADE,
+    FOREIGN KEY (Type_ID) REFERENCES Chatroom_Type(Type_ID) ON DELETE CASCADE
+);
 
 -- Table for Messages
 CREATE TABLE Message (
@@ -88,8 +86,8 @@ CREATE TABLE Message (
     Chatroom_ID INT,
     Content TEXT,
     Timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (Sender_ID) REFERENCES User(User_ID),
-    FOREIGN KEY (Chatroom_ID) REFERENCES Chatroom(Chatroom_ID)
+    FOREIGN KEY (Sender_ID) REFERENCES User(User_ID) ON DELETE CASCADE,
+    FOREIGN KEY (Chatroom_ID) REFERENCES Chatroom(Chatroom_ID) ON DELETE CASCADE
 );
 
 -- Table for Chatroom Participants
@@ -100,17 +98,18 @@ CREATE TABLE Chatroom_Participants (
     Role_ID INT,
     Joined_on DATE,
     Status VARCHAR(50),
-    FOREIGN KEY (User_ID) REFERENCES User(User_ID),
-    FOREIGN KEY (Chatroom_ID) REFERENCES Chatroom(Chatroom_ID),
-    FOREIGN KEY (Role_ID) REFERENCES Role(Role_ID)
+    FOREIGN KEY (User_ID) REFERENCES User(User_ID) ON DELETE CASCADE,
+    FOREIGN KEY (Chatroom_ID) REFERENCES Chatroom(Chatroom_ID) ON DELETE CASCADE,
+    FOREIGN KEY (Role_ID) REFERENCES Role(Role_ID) ON DELETE CASCADE
 );
 
+-- Table for Chatroom Interests
 CREATE TABLE Chatroom_Interests (
     Chatroom_ID INT,
     Interests_ID INT,
     PRIMARY KEY (Chatroom_ID, Interests_ID),
-    FOREIGN KEY (Chatroom_ID) REFERENCES Chatroom(Chatroom_ID),
-    FOREIGN KEY (Interests_ID) REFERENCES Interests(Interests_ID)
+    FOREIGN KEY (Chatroom_ID) REFERENCES Chatroom(Chatroom_ID) ON DELETE CASCADE,
+    FOREIGN KEY (Interests_ID) REFERENCES Interests(Interests_ID) ON DELETE CASCADE
 );
 
 -- Table for Lost and Found Items
@@ -122,11 +121,11 @@ CREATE TABLE Lost_And_Found_Item (
     Status_ID INT,
     Reported_By_User INT,
     Reported_Date DATE,
-    FOREIGN KEY (Status_ID) REFERENCES Item_Status(Status_ID),
-    FOREIGN KEY (Reported_By_User) REFERENCES User(User_ID)
+    FOREIGN KEY (Status_ID) REFERENCES Item_Status(Status_ID) ON DELETE CASCADE,
+    FOREIGN KEY (Reported_By_User) REFERENCES User(User_ID) ON DELETE CASCADE
 );
 
-
+-- Trigger to ensure consistent ordering of Friendship records
 DELIMITER //
 
 CREATE TRIGGER before_friendship_insert

@@ -221,3 +221,66 @@ console.log(1)
         res.status(500).json({ error: "Internal Server Error" , success:false});
     }
 };
+
+
+
+export const getUserChatrooms = async (req, res) => {
+    const userId = req.id; // Extracting user ID from the request
+    const db = await connectDB();
+    try {
+        // Query to get chatrooms where the user is a participant
+        const [chatrooms] = await db.promise().execute(
+                    `SELECT 
+            c.Chatroom_ID AS id, 
+            c.Name AS name, 
+            COALESCE(m.Content, 'No messages yet') AS lastMessage, 
+            COALESCE(u.Username, '-') AS lastSender
+        FROM Chatroom_Participants cp
+        JOIN Chatroom c ON cp.Chatroom_ID = c.Chatroom_ID
+        LEFT JOIN Message m ON c.Chatroom_ID = m.Chatroom_ID 
+            AND m.Timestamp = (
+                SELECT MAX(Timestamp) 
+                FROM Message 
+                WHERE Chatroom_ID = c.Chatroom_ID
+            )
+        LEFT JOIN User u ON m.Sender_ID = u.User_ID
+        WHERE cp.User_ID = ?;
+`,
+            [userId]
+        );
+
+        // Formatting the response
+        const chatRooms = chatrooms.map((chatroom) => ({
+            id: chatroom.id,
+            name: chatroom.name,
+            lastMessage: chatroom.lastMessage || "No messages yet",
+            lastSender: chatroom.lastSender || "-",
+        }));
+
+        return res.status(200).json({chatrooms:chatRooms , success:true});
+    } catch (error) {
+        console.error("Error fetching user chatrooms:", error);
+        return res.status(500).json({ error: "Internal Server Error" });
+    }
+};
+
+export const deleteChatroom = async (req, res) => {
+    const chatroomId = req.params.id; // Extract chatroom ID from the request parameters
+    const db = await connectDB();
+    try {
+        // Query to delete the chatroom
+        const [result] = await db.promise().execute(
+            `DELETE FROM Chatroom WHERE Chatroom_ID = ?`,
+            [chatroomId]
+        );
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ message: "Chatroom not found", success: false });
+        }
+
+        return res.status(200).json({ message: "Chatroom deleted successfully", success: true });
+    } catch (error) {
+        console.error("Error deleting chatroom:", error);
+        return res.status(500).json({ error: "Internal Server Error", success: false });
+    }
+};
