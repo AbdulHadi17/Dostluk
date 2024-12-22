@@ -33,6 +33,7 @@ export function Chatroom() {
   
         if (data.success && Array.isArray(data.chatrooms)) {
           const formattedChatrooms = data.chatrooms.map(room => ({
+            id: room.chatroomId || '', // Use id directly
             name: room.name || '', // Use the name directly
             description: room.description || '', // Use description directly
             type_id: room.type_id || '', // Use type_id for unique ID
@@ -56,6 +57,7 @@ export function Chatroom() {
   }, []);
   
   const filteredChatrooms = chatrooms.filter(room => {
+    const id = room.id || ''; // Default to empty string if undefined
     const title = room.title || ''; // Default to empty string if undefined
     const description = room.description || ''; // Default to empty string if undefined
     const tags = Array.isArray(room.tags) ? room.tags : []; // Ensure tags is an array
@@ -109,8 +111,8 @@ export function Chatroom() {
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.3 }}>
-          {paginatedChatrooms.map((room) => (
-            <ChatroomCard key={room.id} chatroom={room} />
+          {paginatedChatrooms.map((room,index) => (
+            <ChatroomCard key={index} chatroom={room} />
           ))}
         </motion.div>
       </AnimatePresence>

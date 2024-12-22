@@ -21,9 +21,7 @@ export const createChatroom = async (req, res) => {
       const created_by = req.id; // Assuming the middleware sets req.id
       const created_on = new Date();
 
-      console.log(req.body);
-      console.log(req.id);
-
+ 
       // Validate input
       if (!name || !type_id || !interests || interests.length > 2 || interests.length <= 0) {
           return res.status(400).json({ message: 'Invalid input data', success: false });
@@ -172,14 +170,13 @@ export const suggestedChatrooms = async (req, res) => {
         );
 
         const userCategories = userInterests.map(row => row.Category_ID);
-        console.log('hadi ' + userCategories)
         if (userCategories.length === 0) {
             return res.status(200).json({ chatrooms: [] , message:'User has no interests' });
         }
 
 
         const placeholders = userCategories.map(() => '?').join(', ');
-        console.log(placeholders);
+  
         // Step 2: Get chatrooms matching the same category and type_id = 3
         const [chatrooms] = await db.promise().execute(
             `SELECT c.Chatroom_ID, c.Name, c.Description, 
@@ -201,9 +198,7 @@ export const suggestedChatrooms = async (req, res) => {
              GROUP BY c.Chatroom_ID, c.Name, c.Description`,
             [userId, ...userCategories, userId]
         );
-console.log(chatrooms)
-console.log(1)
-        // Step 3: Format the response
+
         const formattedChatrooms = Object.values(chatrooms).map(chatroom => ({
             chatroomId: chatroom.Chatroom_ID,
             name: chatroom.Name,
@@ -213,7 +208,7 @@ console.log(1)
             interests: chatroom.interests ? chatroom.interests.split(",") : []
         }));
 
-        console.log('Hadi '+ formattedChatrooms);
+    
         
         res.status(200).json({ chatrooms: formattedChatrooms  , success:true});
     } catch (error) {
@@ -244,7 +239,7 @@ export const getUserChatrooms = async (req, res) => {
                 WHERE Chatroom_ID = c.Chatroom_ID
             )
         LEFT JOIN User u ON m.Sender_ID = u.User_ID
-        WHERE cp.User_ID = ?;
+        WHERE cp.User_ID = ? AND c.Type_ID != 1 ;
 `,
             [userId]
         );

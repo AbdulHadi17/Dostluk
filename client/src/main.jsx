@@ -7,10 +7,10 @@ import { Toaster } from 'sonner'
 // import {ToastProvider} from './hooks/use-toast'
 
 createRoot(document.getElementById('root')).render(
-  <StrictMode>
+  // <StrictMode>
     <BrowserRouter>
     <App />
     <Toaster />
     </BrowserRouter>
-  </StrictMode>,
+  // </StrictMode>,
 )

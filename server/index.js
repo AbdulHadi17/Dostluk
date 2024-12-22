@@ -9,12 +9,12 @@ import Department from './routes/department.route.js'
 import Friends from './routes/Friends.route.js';
 import Chatrooms from './routes/Chatroom.route.js';
 import CategoriesAndInterests from './routes/categoriesAndInterests.route.js';
-import ChatUser from './routes/ChatUser.route.js';
-
+import Message from './routes/Message.route.js';
+import { app , server } from './socket/socket.io.js';
 
 dotenv.config({});
 
-const app = express();
+
 const PORT =  process.env.VITE_SERVER_PORT || 5000;
 
 const corsOptions = {
@@ -37,7 +37,7 @@ app.use('/api/v1/department',Department);
 app.use('/api/v1/friends',Friends);
 app.use('/api/v1/chatrooms',Chatrooms);
 app.use('/api/v1/categoriesAndInterests',CategoriesAndInterests);
-app.use('/api/v1/ChatUser',ChatUser);
+app.use('/api/v1/message',Message);
 
 app.get('/' , (req,res)=>{
     res.status(200).json({success:true , data:"none"})
@@ -46,7 +46,7 @@ app.get('/' , (req,res)=>{
 
 connectDB().then(()=>{
 
-    app.listen(PORT, ()=>{
+    server.listen(PORT, ()=>{
         console.log(`Server Listening on Port ${PORT}`)
     });
     

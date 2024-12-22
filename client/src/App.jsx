@@ -16,8 +16,6 @@ import NotFound from './components/NotFound'
 
 function App() {
  
-
-
   return (
     <>
     <Routes>

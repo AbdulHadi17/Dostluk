@@ -12,6 +12,7 @@ import { toast } from 'sonner';
 
 export function ChatroomCard({ chatroom }) {
   const {
+    id = '', // Default to empty string
     name = '', // Default to empty string
     description = '', // Default to empty string
     type_id = '', // Default to empty string or handle as needed
@@ -23,8 +24,9 @@ export function ChatroomCard({ chatroom }) {
 
   const handleJoinChatroom = async () => {
     try {
+      
       const response = await axios.post(
-        `http://localhost:3000/api/v1/chatrooms/joinchatroom/${type_id}`,
+        `http://localhost:3000/api/v1/chatrooms/joinchatroom/${id}`,
         {},
         { withCredentials: true }
       );

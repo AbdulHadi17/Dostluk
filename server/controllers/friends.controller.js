@@ -139,12 +139,12 @@ export const findFriends = async (req, res) => {
 };
 
 export const getFriends = async (req, res) => {
-  const userId = req.id; // Extracting user ID from the request
-
-  const db = await connectDB();
   try {
-      // Query to get friends and their last message
-      const [friends] = await db.promise().execute(
+      const db = await connectDB();
+      const userId = req.id;
+
+      // First query: Fetch friends list
+      const [friendsList] = await db.promise().execute(
           `SELECT 
           CASE
               WHEN f.User_ID_1 = ? THEN f.User_ID_2
@@ -157,30 +157,115 @@ export const getFriends = async (req, res) => {
               WHEN m.Sender_ID = ? THEN 'You' 
               ELSE u.Username 
           END AS lastSender
-      FROM Friendship f
-      JOIN User u ON u.User_ID = (CASE WHEN f.User_ID_1 = ? THEN f.User_ID_2 ELSE f.User_ID_1 END)
-      LEFT JOIN Message m ON (m.Sender_ID = u.User_ID OR m.Sender_ID = ?) 
-          AND m.Timestamp = (
-              SELECT MAX(Timestamp)
-              FROM Message
-              WHERE (Sender_ID = u.User_ID OR Sender_ID = ?)
-          )
-      WHERE (f.User_ID_1 = ? OR f.User_ID_2 = ?) AND f.Status = 'Connected';`,
+          FROM Friendship f
+          JOIN User u ON u.User_ID = (CASE WHEN f.User_ID_1 = ? THEN f.User_ID_2 ELSE f.User_ID_1 END)
+          LEFT JOIN Message m ON (m.Sender_ID = u.User_ID OR m.Sender_ID = ?) 
+              AND m.Timestamp = (
+                  SELECT MAX(Timestamp)
+                  FROM Message
+                  WHERE (Sender_ID = u.User_ID OR Sender_ID = ?)
+              )
+          WHERE (f.User_ID_1 = ? OR f.User_ID_2 = ?) AND f.Status = 'Connected';`,
           [userId, userId, userId, userId, userId, userId, userId]
       );
 
-      // Formatting the response
-      const friendsList = friends.map((friend) => ({
-          id: friend.friendId,
-          name: friend.name,
-          lastMessage: friend.lastMessage || "No messages yet",
-          lastSender: friend.lastSender || "-",
-      }));
+      // Second query: Fetch chatroom IDs for each friend
+      const friendsWithChatrooms = await Promise.all(
+          friendsList.map(async (friend) => {
+              const [chatroom] = await db.promise().execute(
+                  `SELECT c.Chatroom_ID 
+                  FROM Chatroom c
+                  JOIN Chatroom_Participants cp1 ON c.Chatroom_ID = cp1.Chatroom_ID
+                  JOIN Chatroom_Participants cp2 ON c.Chatroom_ID = cp2.Chatroom_ID
+                  WHERE c.Type_ID = 1
+                    AND cp1.User_ID = ?
+                    AND cp2.User_ID = ?;`,
+                  [userId, friend.friendId]
+              );
+              return {
+                  ...friend,
+                  chatroom_id: chatroom.length > 0 ? chatroom[0].Chatroom_ID : null
+              };
+          })
+      );
 
-      return res.status(200).json({friendsList , success:true});
+      res.status(200).json({
+          friendsList: friendsWithChatrooms,
+          success: true
+      });
   } catch (error) {
-      console.error("Error fetching friends list:", error);
-      return res.status(500).json({ error: "Internal Server Error" , success:false });
+      console.error(error);
+      res.status(500).json({ message: 'Server error', error });
   }
 };
-  
+
+
+
+export const acceptFriendRequest = async (req, res) => {
+    try {
+        const db = await connectDB();
+
+        const user1 = Math.min(req.id, req.params.id); // Smaller ID
+        const user2 = Math.max(req.id, req.params.id); // Larger ID
+
+        // Check if a friendship exists with status 'Requested'
+        const [friendship] = await db.promise().execute(
+            `SELECT * FROM Friendship WHERE User_ID_1 = ? AND User_ID_2 = ? AND Status = 'Requested'`,
+            [user1, user2]
+        );
+
+        if (!friendship.length) {
+            return res.status(400).json({ message: 'No pending friend request found.' });
+        }
+
+        // Get usernames from User table
+        const [[user1Data], [user2Data]] = await Promise.all([
+            db.promise().execute(`SELECT username FROM User WHERE User_ID = ?`, [user1]),
+            db.promise().execute(`SELECT username FROM User WHERE User_ID = ?`, [user2])
+        ]);
+
+        const username1 = user1Data[0]?.username;
+        const username2 = user2Data[0]?.username;
+
+        if (!username1 || !username2) {
+            return res.status(400).json({ message: 'Usernames could not be retrieved.' });
+        }
+
+        // Update friendship status to 'Connected'
+        await db.promise().execute(
+            `UPDATE Friendship SET Status = 'Connected', Connected_since = ? WHERE User_ID_1 = ? AND User_ID_2 = ?`,
+            [new Date(), user1, user2]
+        );
+
+        // Create a new chatroom
+        const chatroomName = `Private Chat of ${username1} and ${username2}`;
+        const [chatroomResult] = await db.promise().execute(
+            `INSERT INTO Chatroom (Type_ID, Name, Description, Created_by, Created_on) VALUES (?, ?, ?, ?, ?)`,
+            [1, chatroomName, null, req.params.id, new Date()]
+        );
+
+        const chatroomId = chatroomResult.insertId;
+
+        // Add both users to chatroom participants
+        const participants = [
+            [user1, chatroomId, 2, new Date(), 'Joined'],
+            [user2, chatroomId, 2, new Date(), 'Joined']
+        ];
+
+        const placeholders = participants.map(() => '(?, ?, ?, ?, ?)').join(', ');
+const flattenedValues = participants.flat();
+
+await db.promise().execute(
+    `INSERT INTO Chatroom_Participants (User_ID, Chatroom_ID, Role_ID, Joined_on, Status) VALUES ${placeholders}`,
+    flattenedValues
+);
+
+        res.status(200).json({
+            message: 'Friend request accepted.',
+            chatroomId: chatroomId
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Server error', error });
+    }
+};
