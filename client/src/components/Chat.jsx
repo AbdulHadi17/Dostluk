@@ -36,6 +36,7 @@ const Chat = () => {
             .then(response => {
                 setDirectMessages(response.data.friendsList || []); // Use response.data.friendsList
                 toast.success("Friends list loaded successfully");
+                // console.log(directMessages);
             })
             .catch(error => {
                 console.error("Error fetching friends:", error);
@@ -67,7 +68,18 @@ const Chat = () => {
         };
     }, []);
 
-    const handleChatClick = (chatName, isRoom) => {
+    function convertTimestampToTime(timestamp) {
+        const date = new Date(timestamp);
+    
+        // Extract hours and minutes, ensuring two-digit format
+        const hours = date.getHours().toString().padStart(2, '0');
+        const minutes = date.getMinutes().toString().padStart(2, '0');
+    
+        // Combine into HH:MM format
+        return `${hours}:${minutes}`;
+    }
+
+    const handleChatClick = (chatId, chatName, isRoom) => {
         setActiveChat(chatName);
 
         if (isRoom) {
@@ -77,7 +89,17 @@ const Chat = () => {
             setActiveRoom(null); // For private messages, no room is joined
         }
 
-        setMessages([]); // Clear previous messages when switching chats
+        // Fetch messages from the backend
+        alert(chatId);
+        axios.get(`http://localhost:3000/api/v1/message/getFullChat/${chatId}`, { withCredentials: true })
+            .then(response => {
+                setMessages(response.data);
+                console.log(response.data);
+            })
+            .catch(error => {
+                console.error("Error fetching messages:", error);
+                toast.error("Failed to load messages");
+            });
     };
 
     const sendMessage = () => {
@@ -128,7 +150,7 @@ const Chat = () => {
                                             <div
                                                 key={chat.id}
                                                 className="p-4 hover:bg-blue-50 cursor-pointer border-b border-gray-300 transition-colors duration-200"
-                                                onClick={() => handleChatClick(chat.name, false)}
+                                                onClick={() => handleChatClick(chat.chatroom_id, chat.name, false)}
                                             >
                                                 <div className="flex items-center">
                                                     <MessageSquare className="mr-3 text-blue-500" />
@@ -154,7 +176,7 @@ const Chat = () => {
                                             <div
                                                 key={room.id}
                                                 className="p-4 hover:bg-blue-50 cursor-pointer border-b border-gray-300 transition-colors duration-200"
-                                                onClick={() => handleChatClick(room.name, true)}
+                                                onClick={() => handleChatClick(room.id, room.name, true)}
                                             >
                                                 <div className="flex items-center">
                                                     <Users className="mr-3 text-green-500" />
@@ -212,14 +234,14 @@ const Chat = () => {
                                 >
                                     <div
                                         className={`inline-block p-3 rounded-lg ${
-                                            message.sender === "You"
+                                            message.Sender_Name === "You"
                                                 ? "bg-gradient-to-r from-blue-500 to-blue-600 text-white"
                                                 : "bg-gradient-to-r from-gray-200 to-gray-300 text-gray-800"
                                         }`}
                                     >
-                                        <p className="font-semibold">{message.sender}</p>
-                                        <p>{message.content}</p>
-                                        <div className="text-xs mt-1">{message.timestamp}</div>
+                                        <p className="font-semibold">{message.Sender_Name}</p>
+                                        <p>{message.Content}</p>
+                                        <div className="text-xs mt-1">{convertTimestampToTime(message.Timestamp)}</div>
                                     </div>
                                 </motion.div>
                             ))}

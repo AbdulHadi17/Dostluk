@@ -225,25 +225,35 @@ export const getUserChatrooms = async (req, res) => {
     try {
         // Query to get chatrooms where the user is a participant
         const [chatrooms] = await db.promise().execute(
-                    `SELECT 
-            c.Chatroom_ID AS id, 
-            c.Name AS name, 
-            COALESCE(m.Content, 'No messages yet') AS lastMessage, 
-            COALESCE(u.Username, '-') AS lastSender
-        FROM Chatroom_Participants cp
-        JOIN Chatroom c ON cp.Chatroom_ID = c.Chatroom_ID
-        LEFT JOIN Message m ON c.Chatroom_ID = m.Chatroom_ID 
-            AND m.Timestamp = (
-                SELECT MAX(Timestamp) 
-                FROM Message 
-                WHERE Chatroom_ID = c.Chatroom_ID
-            )
-        LEFT JOIN User u ON m.Sender_ID = u.User_ID
-        WHERE cp.User_ID = ? AND c.Type_ID != 1 ;
-`,
+            `SELECT 
+                c.Chatroom_ID AS id, 
+                c.Name AS name, 
+                COALESCE(MAX(m.Content), 'No messages yet') AS lastMessage, 
+                COALESCE(MAX(u.Username), '-') AS lastSender
+            FROM Chatroom_Participants cp
+            JOIN Chatroom c ON cp.Chatroom_ID = c.Chatroom_ID
+            LEFT JOIN (
+                SELECT 
+                    m1.Chatroom_ID, 
+                    m1.Content, 
+                    m1.Sender_ID,
+                    m1.Timestamp
+                FROM Message m1
+                WHERE m1.Timestamp = (
+                    SELECT MAX(m2.Timestamp)
+                    FROM Message m2
+                    WHERE m2.Chatroom_ID = m1.Chatroom_ID
+                )
+            ) m ON c.Chatroom_ID = m.Chatroom_ID
+            LEFT JOIN User u ON m.Sender_ID = u.User_ID
+            WHERE cp.User_ID = ? AND c.Type_ID != 1
+            GROUP BY c.Chatroom_ID, c.Name;`,
             [userId]
         );
-
+        
+        
+        
+        
         // Formatting the response
         const chatRooms = chatrooms.map((chatroom) => ({
             id: chatroom.id,

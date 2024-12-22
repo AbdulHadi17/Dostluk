@@ -139,64 +139,73 @@ export const findFriends = async (req, res) => {
 };
 
 export const getFriends = async (req, res) => {
-  try {
-      const db = await connectDB();
-      const userId = req.id;
+    try {
+        const db = await connectDB();
+        const userId = req.id;
 
-      // First query: Fetch friends list
-      const [friendsList] = await db.promise().execute(
-          `SELECT 
-          CASE
-              WHEN f.User_ID_1 = ? THEN f.User_ID_2
-              ELSE f.User_ID_1
-          END AS friendId,
-          u.Username AS name,
-          COALESCE(m.Content, 'No messages yet') AS lastMessage,
-          CASE 
-              WHEN m.Content IS NULL THEN '-' 
-              WHEN m.Sender_ID = ? THEN 'You' 
-              ELSE u.Username 
-          END AS lastSender
-          FROM Friendship f
-          JOIN User u ON u.User_ID = (CASE WHEN f.User_ID_1 = ? THEN f.User_ID_2 ELSE f.User_ID_1 END)
-          LEFT JOIN Message m ON (m.Sender_ID = u.User_ID OR m.Sender_ID = ?) 
-              AND m.Timestamp = (
-                  SELECT MAX(Timestamp)
-                  FROM Message
-                  WHERE (Sender_ID = u.User_ID OR Sender_ID = ?)
-              )
-          WHERE (f.User_ID_1 = ? OR f.User_ID_2 = ?) AND f.Status = 'Connected';`,
-          [userId, userId, userId, userId, userId, userId, userId]
-      );
+        // SQL Query
+        const query = `
+            SELECT 
+                cp1.Chatroom_ID AS chatroom_id,
+                u.User_ID AS friendId,
+                u.username AS name,
+                m.Content AS lastMessage,
+                CASE 
+                    WHEN m.Sender_ID = ? THEN 'You'
+                    ELSE 'Them'
+                END AS lastSender
+            FROM 
+                Chatroom_Participants cp1
+            JOIN 
+                Chatroom_Participants cp2 
+                ON cp1.Chatroom_ID = cp2.Chatroom_ID AND cp1.User_ID != cp2.User_ID
+            JOIN 
+                User u 
+                ON cp2.User_ID = u.User_ID
+            JOIN 
+                Chatroom c 
+                ON cp1.Chatroom_ID = c.Chatroom_ID
+            LEFT JOIN 
+                Message m 
+                ON c.Chatroom_ID = m.Chatroom_ID
+            WHERE 
+                cp1.User_ID = ?
+                AND c.Type_ID = 1
+                AND m.Timestamp = (
+                    SELECT MAX(Timestamp)
+                    FROM Message
+                    WHERE Chatroom_ID = c.Chatroom_ID
+                )
+            ORDER BY 
+                m.Timestamp DESC;
+        `;
 
-      // Second query: Fetch chatroom IDs for each friend
-      const friendsWithChatrooms = await Promise.all(
-          friendsList.map(async (friend) => {
-              const [chatroom] = await db.promise().execute(
-                  `SELECT c.Chatroom_ID 
-                  FROM Chatroom c
-                  JOIN Chatroom_Participants cp1 ON c.Chatroom_ID = cp1.Chatroom_ID
-                  JOIN Chatroom_Participants cp2 ON c.Chatroom_ID = cp2.Chatroom_ID
-                  WHERE c.Type_ID = 1
-                    AND cp1.User_ID = ?
-                    AND cp2.User_ID = ?;`,
-                  [userId, friend.friendId]
-              );
-              return {
-                  ...friend,
-                  chatroom_id: chatroom.length > 0 ? chatroom[0].Chatroom_ID : null
-              };
-          })
-      );
+        const result = await db.promise().execute(query, [userId, userId]);
+        console.log("Query Result:", result);
 
-      res.status(200).json({
-          friendsList: friendsWithChatrooms,
-          success: true
-      });
-  } catch (error) {
-      console.error(error);
-      res.status(500).json({ message: 'Server error', error });
-  }
+        if (!result || !Array.isArray(result)) {
+            throw new Error("Invalid database result structure");
+        }
+
+        const rows = result[0];
+        console.log("Rows:", rows);
+
+        const friendsWithChatrooms = rows.map(row => ({
+            friendId: row.friendId,
+            name: row.name,
+            lastMessage: row.lastMessage,
+            lastSender: row.lastSender,
+            chatroom_id: row.chatroom_id
+        }));
+
+        res.status(200).json({
+            friendsList: friendsWithChatrooms,
+            success: true
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Server error", error: error.message });
+    }
 };
 
 
