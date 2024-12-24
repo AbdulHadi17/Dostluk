@@ -216,3 +216,47 @@ export const getUserData = async (req, res) => {
     return res.status(500).json({ message: 'Server Error', success: false });
   }
 };
+
+
+export const getUserInfo = async (req, res) => {
+  try {
+    // Get the user ID from cookies or authentication middleware
+    const userId = req.id;
+    if (!userId) {
+      return res.status(401).json({ message: 'User not logged in', success: false });
+    }
+
+    const db = await connectDB();
+
+    // Query to fetch only the user ID and username
+    const [userInfo] = await db.promise().execute(
+      `
+      SELECT 
+        User_ID AS userId, 
+        username
+      FROM 
+        user
+      WHERE 
+        User_ID = ?;
+      `,
+      [userId]
+    );
+
+    if (userInfo.length === 0) {
+      return res.status(404).json({ message: 'User not found', success: false });
+    }
+
+    // Extract data from query result
+    const { userId: fetchedUserId, username } = userInfo[0];
+
+    // Send response
+    return res.status(200).json({
+      userId: fetchedUserId,
+      username,
+      success: true,
+    });
+  } catch (error) {
+    console.error('Error fetching user data:', error);
+    return res.status(500).json({ message: 'Server Error', success: false });
+  }
+};

@@ -137,19 +137,19 @@ export const findFriends = async (req, res) => {
         return res.status(500).json({ message: "Server Error", success: false });
     }
 };
-
 export const getFriends = async (req, res) => {
     try {
         const db = await connectDB();
         const userId = req.id;
 
-        // SQL Query
+        // Updated SQL Query
         const query = `
             SELECT 
                 cp1.Chatroom_ID AS chatroom_id,
                 u.User_ID AS friendId,
                 u.username AS name,
                 m.Content AS lastMessage,
+                c.Name AS chatroomName, -- Fetch chatroom name
                 CASE 
                     WHEN m.Sender_ID = ? THEN 'You'
                     ELSE 'Them'
@@ -181,21 +181,22 @@ export const getFriends = async (req, res) => {
         `;
 
         const result = await db.promise().execute(query, [userId, userId]);
-        console.log("Query Result:", result);
+        
 
         if (!result || !Array.isArray(result)) {
             throw new Error("Invalid database result structure");
         }
 
         const rows = result[0];
-        console.log("Rows:", rows);
+        
 
         const friendsWithChatrooms = rows.map(row => ({
             friendId: row.friendId,
             name: row.name,
             lastMessage: row.lastMessage,
             lastSender: row.lastSender,
-            chatroom_id: row.chatroom_id
+            chatroom_id: row.chatroom_id,
+            chatroomName: row.chatroomName // Add chatroom name to the response
         }));
 
         res.status(200).json({

@@ -11,7 +11,13 @@ import io from 'socket.io-client';
 
 const socket = io('http://localhost:3000', { withCredentials: true });
 
+function convertTimestampToTime(timestamp) {
+    const date = new Date(`1970-01-01T${timestamp}Z`);
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+}
+
 const Chat = () => {
+    const [userId, setUserId] = useState(null);
     const [activeChat, setActiveChat] = useState(null);
     const [activeTab, setActiveTab] = useState("direct");
     const [messages, setMessages] = useState([]);
@@ -19,106 +25,121 @@ const Chat = () => {
     const [activeRoom, setActiveRoom] = useState(null);
     const [chatRooms, setChatRooms] = useState([]);
     const [directMessages, setDirectMessages] = useState([]);
+    const [receiverID, setReceiverID] = useState(null);
+    const [currentChatroomId, setCurrentChatroomId] = useState(null);
 
     useEffect(() => {
-        // Fetch chat rooms
-        axios.get('http://localhost:3000/api/v1/chatrooms/getUserChatrooms', { withCredentials: true })
-            .then(response => {
-                setChatRooms(response.data.chatrooms || []); // Use response.data.chatrooms
-                toast.success("Chat rooms loaded successfully");
-            })
-            .catch(error => {
-                toast.error("Failed to load chat rooms");
-            });
+        const fetchUserInfo = async () => {
+            try {
+                const response = await axios.get('http://localhost:3000/api/v1/user/getuserinfo', { withCredentials: true });
+                const id = response.data.userId;
+                setUserId(id);
+                socket.emit('register', id);
+                toast.success("User registered with socket server successfully");
+            } catch (error) {
+                toast.error("Failed to fetch user information");
+            }
+        };
 
-        // Fetch friends
-        axios.get('http://localhost:3000/api/v1/friends/getfriends', { withCredentials: true })
-            .then(response => {
-                setDirectMessages(response.data.friendsList || []); // Use response.data.friendsList
-                toast.success("Friends list loaded successfully");
-                // console.log(directMessages);
-            })
-            .catch(error => {
-                console.error("Error fetching friends:", error);
-                toast.error("Failed to load friends list");
-            });
+        fetchUserInfo();
     }, []);
 
     useEffect(() => {
-        const handleRoomMessage = ({ message, sender, timestamp }) => {
-            setMessages(prev => [
-                ...prev,
-                { sender, content: message, timestamp },
-            ]);
+        const fetchChatData = async () => {
+            try {
+                const chatroomsResponse = await axios.get('http://localhost:3000/api/v1/chatrooms/getUserChatrooms', { withCredentials: true });
+                setChatRooms(chatroomsResponse.data.chatrooms || []);
+                toast.success("Chat rooms loaded successfully");
+            } catch (error) {
+                toast.error("Failed to load chat rooms");
+            }
+
+            try {
+                const friendsResponse = await axios.get('http://localhost:3000/api/v1/friends/getfriends', { withCredentials: true });
+                setDirectMessages(friendsResponse.data.friendsList || []);
+                toast.success("Friends list loaded successfully");
+            } catch (error) {
+                toast.error("Failed to load friends list");
+            }
         };
 
-        const handlePrivateMessage = ({ message, sender, timestamp }) => {
-            setMessages(prev => [
-                ...prev,
-                { sender, content: message, timestamp },
-            ]);
-        };
+        fetchChatData();
+    }, []);
 
-        socket.on("receiveRoomMessage", handleRoomMessage);
-        socket.on("receivePrivateMessage", handlePrivateMessage);
+    useEffect(() => {
+        socket.on("receiveRoomMessage", (data) => {
+            setMessages((prev) => [...prev, data]);
+        });
+
+        socket.on("receivePrivateMessage", (data) => {
+            setMessages((prev) => [...prev, data]);
+        });
 
         return () => {
-            socket.off("receiveRoomMessage", handleRoomMessage);
-            socket.off("receivePrivateMessage", handlePrivateMessage);
+            socket.off("receiveRoomMessage");
+            socket.off("receivePrivateMessage");
         };
     }, []);
 
-    function convertTimestampToTime(timestamp) {
-        const date = new Date(timestamp);
-    
-        // Extract hours and minutes, ensuring two-digit format
-        const hours = date.getHours().toString().padStart(2, '0');
-        const minutes = date.getMinutes().toString().padStart(2, '0');
-    
-        // Combine into HH:MM format
-        return `${hours}:${minutes}`;
-    }
-
-    const handleChatClick = (chatId, chatName, isRoom) => {
+    const handleChatClick = async (chatId, chatName, isRoom, friendId) => {
         setActiveChat(chatName);
+        setReceiverID(friendId);
+        setCurrentChatroomId(chatId);
 
         if (isRoom) {
             setActiveRoom(chatName);
             socket.emit("joinRoom", chatName);
         } else {
-            setActiveRoom(null); // For private messages, no room is joined
+            setActiveRoom(null);
         }
 
-        // Fetch messages from the backend
-        alert(chatId);
-        axios.get(`http://localhost:3000/api/v1/message/getFullChat/${chatId}`, { withCredentials: true })
-            .then(response => {
-                setMessages(response.data);
-                console.log(response.data);
-            })
-            .catch(error => {
-                console.error("Error fetching messages:", error);
-                toast.error("Failed to load messages");
-            });
+        try {
+            const response = await axios.get(`http://localhost:3000/api/v1/message/getFullChat/${chatId}`, { withCredentials: true });
+            setMessages(response.data);
+        } catch (error) {
+            toast.error("Failed to load messages");
+        }
     };
 
-    const sendMessage = () => {
+    const sendMessage = async () => {
         if (!newMessage.trim()) return;
-
+    
+        // Format the timestamp to HH:mm:ss
+        const now = new Date();
+        const timestamp = now.toLocaleTimeString('en-US', {
+            hour12: false,
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+        });
+    
+        const messageData = {
+            content: newMessage,
+            timestamp: timestamp, // Correctly formatted timestamp
+        };
+    
+        console.log("Sending message:", messageData);
+    
         if (activeRoom) {
-            socket.emit("sendRoomMessage", { room: activeRoom, message: newMessage });
+            socket.emit("sendRoomMessage", { room: activeRoom, message: newMessage, chatroomId: currentChatroomId });
         } else {
-            socket.emit("sendPrivateMessage", { recipientId: activeChat, message: newMessage });
+            socket.emit("sendPrivateMessage", { recipientId: receiverID, message: newMessage });
         }
-
-        setMessages(prev => [
-            ...prev,
-            { sender: "You", content: newMessage, timestamp: new Date().toLocaleTimeString() },
-        ]);
+    
+        try {
+            const response = await axios.post(`http://localhost:3000/api/v1/message/sendMessage/${currentChatroomId}`, messageData, {withCredentials:true});
+            toast.success("Message sent successfully");
+            console.log("Response:", response.data);
+        } catch (error) {
+            console.error("Error sending message:", error.response?.data || error.message);
+            toast.error("Failed to save message");
+        }
+    
         setNewMessage("");
     };
 
-    const handleLeaveChatRoom = () => {
+
+        const handleLeaveChatRoom = () => {
         if (activeRoom) {
             socket.emit("leaveRoom", activeRoom);
             setActiveRoom(null);
@@ -126,6 +147,7 @@ const Chat = () => {
         setActiveChat(null);
         setMessages([]);
     };
+
 
     return (
         <div className="h-full bg-gradient-to-br from-white to-gray-100 text-gray-800 p-4 shadow-lg">
@@ -150,7 +172,7 @@ const Chat = () => {
                                             <div
                                                 key={chat.id}
                                                 className="p-4 hover:bg-blue-50 cursor-pointer border-b border-gray-300 transition-colors duration-200"
-                                                onClick={() => handleChatClick(chat.chatroom_id, chat.name, false)}
+                                                onClick={() => handleChatClick(chat.chatroom_id, chat.chatroomName, false , chat.friendId)}
                                             >
                                                 <div className="flex items-center">
                                                     <MessageSquare className="mr-3 text-blue-500" />
