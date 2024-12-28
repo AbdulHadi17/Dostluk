@@ -69,7 +69,7 @@ io.on('connection', (socket) => {
         console.log(Sender_Name);
 
         if (recipientSocketId) {
-            io.to(recipientSocketId).emit('receivePrivateMessage', {
+            io.to([recipientSocketId,socket.id]).emit('receivePrivateMessage', {
                 Content:message,
                 Sender_Name: Sender_Name,
                 Timestamp:timestamp,

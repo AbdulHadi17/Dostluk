@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState , useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import axios from 'axios';
 import { toast } from 'sonner';
@@ -34,6 +34,26 @@ const Chat = () => {
     const [receiverID, setReceiverID] = useState(null);
     const [currentChatroomId, setCurrentChatroomId] = useState(null);
     const [currentUsername, setCurrentUsername] = useState('');
+
+    const scrollRef = useRef(null); // Ref for the scrollable container
+
+    useEffect(() => {
+        const scrollToBottom = () => {
+            if (scrollRef.current) {
+                scrollRef.current.scrollTo({
+                    top: scrollRef.current.scrollHeight,
+                    behavior: 'smooth'
+                });
+            }
+        };
+
+        scrollToBottom();
+        // Set up a short delay to ensure scrolling after render
+        const timeoutId = setTimeout(scrollToBottom, 100);
+
+        return () => clearTimeout(timeoutId);
+    }, [messages, activeChat]);
+
 
     useEffect(() => {
         const fetchUserInfo = async () => {
@@ -105,7 +125,7 @@ const Chat = () => {
 
         if (isRoom) {
             setActiveRoom(chatName);
-            socket.emit("joinRoom", chatName);
+            socket.emit("joinRoom", currentChatroomId);
         } else {
             setActiveRoom(null);
         }
@@ -113,6 +133,10 @@ const Chat = () => {
         try {
             const response = await axios.get(`http://localhost:3000/api/v1/message/getFullChat/${chatId}`, { withCredentials: true });
             setMessages(response.data);
+            // Scroll to the bottom after loading messages
+            if (scrollRef.current) {
+                scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+            }
         } catch (error) {
             toast.error("Failed to load messages");
         }
@@ -262,29 +286,33 @@ const Chat = () => {
                                 </Button>
                             </div>
                         </div>
-                        <ScrollArea className="h-[calc(100vh-200px)] mb-4 bg-white rounded-lg shadow-inner p-4">
+                        <div
+                            className="h-[calc(100vh-200px)] mb-4 bg-white rounded-lg shadow-inner p-4 overflow-y-auto"
+                            ref={scrollRef}
+                        >
                             {messages.map((message, index) => (
                                 <motion.div
                                     key={index}
                                     initial={{ opacity: 0, y: 20 }}
                                     animate={{ opacity: 1, y: 0 }}
                                     transition={{ duration: 0.3 }}
-                                    className={`mb-4 ${message.sender === "You" ? "text-right" : "text-left"}`}
+                                    className={`mb-4 ${message.Sender_Name === currentUsername ? "text-right" : "text-left"}`}
                                 >
                                     <div
                                         className={`inline-block p-3 rounded-lg ${
-                                            message.Sender_Name === "You"
+                                            message.Sender_Name === currentUsername
                                                 ? "bg-gradient-to-r from-blue-500 to-blue-600 text-white"
                                                 : "bg-gradient-to-r from-gray-200 to-gray-300 text-gray-800"
                                         }`}
                                     >
-                                        <p className="font-semibold">{message.Sender_Name}</p>
+                                        <p className="font-semibold">{(message.Sender_Name === currentUsername)?'You':message.Sender_Name}</p>
                                         <p>{message.Content}</p>
                                         <div className="text-xs mt-1">{convertTimestampToTime(message.Timestamp)}</div>
                                     </div>
                                 </motion.div>
                             ))}
-                        </ScrollArea>
+                            <div style={{ float: "left", clear: "both" }} />
+                        </div>
                         <div className="flex items-center">
                             <Input
                                 value={newMessage}
@@ -304,3 +332,4 @@ const Chat = () => {
 };
 
 export default Chat;
+
