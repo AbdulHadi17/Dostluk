@@ -11,10 +11,16 @@ import io from 'socket.io-client';
 
 const socket = io('http://localhost:3000', { withCredentials: true });
 
-function convertTimestampToTime(timestamp) {
-    const date = new Date(`1970-01-01T${timestamp}Z`);
-    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-}
+function convertTimestampToTime(isoString) {
+
+        const date = new Date(isoString);
+        let hours = date.getHours();
+        const minutes = date.getMinutes().toString().padStart(2, '0');
+        const amPm = hours >= 12 ? 'PM' : 'AM';
+        hours = hours % 12 || 12; // Convert 0 (midnight) or 12 (noon) to 12-hour format
+        return `${hours}:${minutes} ${amPm}`;
+    }
+    
 
 const Chat = () => {
     const [userId, setUserId] = useState(null);
@@ -27,6 +33,7 @@ const Chat = () => {
     const [directMessages, setDirectMessages] = useState([]);
     const [receiverID, setReceiverID] = useState(null);
     const [currentChatroomId, setCurrentChatroomId] = useState(null);
+    const [currentUsername, setCurrentUsername] = useState('');
 
     useEffect(() => {
         const fetchUserInfo = async () => {
@@ -34,6 +41,7 @@ const Chat = () => {
                 const response = await axios.get('http://localhost:3000/api/v1/user/getuserinfo', { withCredentials: true });
                 const id = response.data.userId;
                 setUserId(id);
+                setCurrentUsername(response.data.username);
                 socket.emit('register', id);
                 toast.success("User registered with socket server successfully");
             } catch (error) {
@@ -72,18 +80,27 @@ const Chat = () => {
         });
 
         socket.on("receivePrivateMessage", (data) => {
+            console.log("Received private message hadi:", data);
             setMessages((prev) => [...prev, data]);
+            console.log("Messages:", messages);
+        });
+
+        socket.on("disconnect", () => {
+            toast.error("Disconnected from the server");
         });
 
         return () => {
             socket.off("receiveRoomMessage");
             socket.off("receivePrivateMessage");
+            socket.off("disconnect");
         };
     }, []);
 
     const handleChatClick = async (chatId, chatName, isRoom, friendId) => {
         setActiveChat(chatName);
-        setReceiverID(friendId);
+        if(friendId){
+            setReceiverID(friendId);
+        }
         setCurrentChatroomId(chatId);
 
         if (isRoom) {
@@ -123,7 +140,7 @@ const Chat = () => {
         if (activeRoom) {
             socket.emit("sendRoomMessage", { room: activeRoom, message: newMessage, chatroomId: currentChatroomId });
         } else {
-            socket.emit("sendPrivateMessage", { recipientId: receiverID, message: newMessage });
+            socket.emit("sendPrivateMessage", { recipientId: receiverID, message: newMessage , Sender_Name:currentUsername });
         }
     
         try {

@@ -59,15 +59,20 @@ io.on('connection', (socket) => {
     });
 
     // Handling private messages
-    socket.on('sendPrivateMessage', async ({ recipientId, message }) => {
+    socket.on('sendPrivateMessage', async ({ recipientId, message,Sender_Name }) => {
         const recipientSocketId = userSocketMap.get(recipientId);
-        const timestamp = new Date().toLocaleTimeString();
+        const timestamp = new Date();
+        console.log(`Recipient socket ID: ${recipientSocketId}`);
+        console.log(`Recipient socket ID: ${recipientSocketId}`);
+        console.log(message);
+        console.log(timestamp);
+        console.log(Sender_Name);
 
         if (recipientSocketId) {
             io.to(recipientSocketId).emit('receivePrivateMessage', {
-                message,
-                sender: socket.id,
-                timestamp,
+                Content:message,
+                Sender_Name: Sender_Name,
+                Timestamp:timestamp,
             });
 
             console.log(`Private message from ${socket.id} to ${recipientSocketId}: ${message}`);
