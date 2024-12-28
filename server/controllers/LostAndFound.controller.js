@@ -48,6 +48,35 @@ export const getLostAndFoundItems = async (req, res) => {
     }
 };
 
+
+
+export const deleteAnItem = async (req, res) => {
+    const itemId = req.params.id; // Extract the item ID from the request parameters.
+
+    if (!itemId) {
+        return res.status(400).json({ error: 'Item ID is required' });
+    }
+
+    try {
+        const db = await connectDB(); // Connect to the database.
+
+        // SQL query to delete the item
+        const query = `DELETE FROM Lost_And_Found_Item WHERE Item_ID = ?`;
+
+        const [result] = await db.promise().execute(query, [itemId]);
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ error: 'Item not found' });
+        }
+
+        res.status(200).json({ message: 'Item deleted successfully' });
+    } catch (error) {
+        console.error('Error deleting item:', error.message);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+};
+
+
 export const addAnItem = async (req, res) => {
   try {
     const db = await connectDB();

@@ -1,4 +1,6 @@
 import { useState, useEffect } from "react";
+import axios from "axios";
+import { toast, Toaster } from "sonner";
 import {
   Carousel,
   CarouselContent,
@@ -6,48 +8,105 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousel";
-import { User, Star, Check } from "lucide-react";
+import { User, Star, Check, X, Bell } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import axios from "axios";
-import { toast, Toaster } from "sonner";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 const FindFriends = () => {
   const [suggestedProfiles, setSuggestedProfiles] = useState([]);
   const [friendRequests, setFriendRequests] = useState({});
+  const [incomingRequests, setIncomingRequests] = useState([]);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
 
-  useEffect(() => {
-    const fetchSuggestedProfiles = async () => {
-      try {
-        const response = await axios.get('http://localhost:3000/api/v1/friends/findfriends', { withCredentials: true });
-
-        if (response.data.success) {
-          setSuggestedProfiles(response.data.data);
-          toast.success("Friend suggestions based on your interests!");
-        } else {
-          toast.error(`Failed to fetch suggestions: ${response.data.message}`);
-        }
-      } catch (error) {
-        console.error("Error fetching suggested profiles:", error);
-        toast.error("Error fetching friend suggestions. Please try again later.");
-      }
-    };
-
-    fetchSuggestedProfiles();
-  }, []);
-
-  const toggleFriendRequest = async (id) => {
+  // Fetch suggested profiles and incoming friend requests
+  const fetchSuggestedProfiles = async () => {
     try {
-      const response = await axios.post(`http://localhost:3000/api/v1/friends/sendRequest/${id}`, {}, { withCredentials: true });
+      const response = await axios.get("http://localhost:3000/api/v1/friends/findfriends", {
+        withCredentials: true,
+      });
 
       if (response.data.success) {
-        // Update friendRequests state with the new status
+        setSuggestedProfiles(response.data.data);
+        toast.success("Friend suggestions based on your interests!");
+      } else {
+        toast.error(`Failed to fetch suggestions: ${response.data.message}`);
+      }
+    } catch (error) {
+      console.error("Error fetching suggested profiles:", error);
+      toast.error("Error fetching friend suggestions. Please try again later.");
+    }
+  };
+
+  const fetchIncomingRequests = async () => {
+    try {
+      const response = await axios.get("http://localhost:3000/api/v1/friends/getFriendRequests", {
+        withCredentials: true,
+      });
+
+      if (response.data.success) {
+        setIncomingRequests(response.data.data);
+      } else {
+        toast.error(`Failed to fetch incoming requests: ${response.data.message}`);
+      }
+    } catch (error) {
+      console.error("Error fetching incoming requests:", error);
+      toast.error("Error fetching incoming friend requests. Please try again later.");
+    }
+  };
+
+  useEffect(() => {
+    fetchSuggestedProfiles();
+    fetchIncomingRequests();
+  }, []);
+
+  // Handle friend request accept/decline
+  const handleFriendRequest = async (id, action) => {
+    try {
+      const response = await axios.post(
+        `http://localhost:3000/api/v1/friends/${action}FriendRequest/${id}`,
+        {},
+        { withCredentials: true }
+      );
+
+      console.log(response.data);
+
+      if (response.data.success) {
+        console.log(response.data)
+        toast.success(response.data.message);
+        // Refresh the data after accepting/declining a friend request
+        fetchIncomingRequests();
+        fetchSuggestedProfiles();
+      } else {
+        toast.error(`Failed to ${action} friend request: ${response.data.message}`);
+      }
+    } catch (error) {
+      console.error(`Error ${action}ing friend request:`, error);
+      toast.error(`Error ${action}ing friend request. Please try again later.`);
+    }
+  };
+
+  // Send or toggle a friend request
+  const toggleFriendRequest = async (id) => {
+    try {
+      const response = await axios.post(
+        `http://localhost:3000/api/v1/friends/sendRequest/${id}`,
+        {},
+        { withCredentials: true }
+      );
+
+      if (response.data.success) {
         setFriendRequests((prev) => ({
           ...prev,
           [id]: response.data.status,
         }));
-
-        // Show toast message from the response
         toast.success(response.data.message);
       } else {
         toast.error(`Failed to update friendship status: ${response.data.message}`);
@@ -60,10 +119,63 @@ const FindFriends = () => {
 
   return (
     <div className="h-full bg-white p-6 shadow-2xl">
-      {/* Toaster for Toast Notifications */}
       <Toaster />
 
-      <h2 className="text-2xl font-bold text-gray-900 mb-4 text-center">Find Friends</h2>
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-2xl font-bold text-gray-900">Find Friends</h2>
+        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <DialogTrigger asChild>
+            <Button variant="outline" className="relative">
+              <Bell className="w-5 h-5" />
+              {incomingRequests.length > 0 && (
+                <Badge className="absolute -top-2 -right-2 px-2 py-1 text-xs">
+                  {incomingRequests.length}
+                </Badge>
+              )}
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Incoming Friend Requests</DialogTitle>
+            </DialogHeader>
+            {incomingRequests.length === 0 ? (
+              <p className="text-center text-gray-500 my-4">No incoming friend requests.</p>
+            ) : (
+              <ul className="space-y-4">
+                {incomingRequests.map((request, key) => (
+                  <li key={key} className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
+                    <div className="flex items-center space-x-3">
+                      <img
+                        src={request.profilePicture || "https://via.placeholder.com/40"}
+                        alt={`${request.name}'s profile`}
+                        className="w-10 h-10 rounded-full object-cover"
+                      />
+                      <span className="font-medium">{request.name}</span>
+                    </div>
+                    <div className="flex space-x-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleFriendRequest(request.id, "accept")}
+                      >
+                        <Check className="w-4 h-4 text-green-500" />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleFriendRequest(request.id, "decline")}
+                      >
+                        <X className="w-4 h-4 text-red-500" />
+                      </Button>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </DialogContent>
+        </Dialog>
+      </div>
+
       <p className="text-gray-600 text-center mb-6">
         Discover and connect with new friends based on your mutual interests.
       </p>
@@ -91,7 +203,8 @@ const FindFriends = () => {
                       {profile.commonInterests.map((interest, index) => (
                         <Badge
                           key={index}
-                          className="text-white px-2 py-1 rounded-md text-xs font-medium"
+                          variant="secondary"
+                          className="px-2 py-1 text-xs font-medium"
                         >
                           {interest}
                         </Badge>
@@ -103,34 +216,27 @@ const FindFriends = () => {
                         {profile.similarityPercentage}% Similar
                       </span>
                     </div>
-                    <button
-                      className={`px-4 py-2 text-sm font-bold rounded-md transition-colors duration-300 ${
-                        friendRequests[profile.id] === "Requested"
-                          ? "bg-green-500 text-white"
-                          : "bg-slate-800 text-white hover:bg-slate-900"
-                      }`}
+                    <Button
+                      variant={friendRequests[profile.id] === "Requested" ? "secondary" : "default"}
+                      className="w-full"
                       onClick={() => toggleFriendRequest(profile.id)}
                     >
                       {friendRequests[profile.id] === "Requested" ? (
-                        <span className="flex items-center gap-2">
+                        <span className="flex items-center justify-center gap-2">
                           <Check className="w-4 h-4" />
                           Requested
                         </span>
                       ) : (
                         "Send Friend Request"
                       )}
-                    </button>
+                    </Button>
                   </CardContent>
                 </Card>
               </CarouselItem>
             ))}
           </CarouselContent>
-          <CarouselPrevious className="absolute left-2 top-1/2 transform -translate-y-1/2">
-            <User className="w-6 h-6 text-blue-600" />
-          </CarouselPrevious>
-          <CarouselNext className="absolute right-2 top-1/2 transform -translate-y-1/2">
-            <User className="w-6 h-6 text-blue-600" />
-          </CarouselNext>
+          <CarouselPrevious />
+          <CarouselNext />
         </Carousel>
       )}
     </div>

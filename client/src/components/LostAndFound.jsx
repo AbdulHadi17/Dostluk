@@ -15,6 +15,7 @@ import { Search, Plus } from "lucide-react";
 import { AddItemDialog } from "./AddItemDialog";
 import { ItemCard } from "./ItemCard";
 import { toast } from "sonner";
+import { use } from "react";
 
 const LostAndFound = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -23,36 +24,53 @@ const LostAndFound = () => {
   const [itemsPerPage, setItemsPerPage] = useState(6);
   const [isAddItemDialogOpen, setIsAddItemDialogOpen] = useState(false);
   const [items, setItems] = useState([]);
+  const [CurrentUsername,setCurrentUsername] = useState('Abdullah Khan');
 
   // Fetch items from the API
-  useEffect(() => {
-    const fetchLostAndFoundItems = async () => {
-      try {
+
+useEffect(() => {
+
+  const fetchUserInfo = async () => {
+    try {
+        const response = await axios.get('http://localhost:3000/api/v1/user/getuserinfo', { withCredentials: true });
+        setCurrentUsername(response.data.username);
+    } catch (error) {
+        toast.error("Failed to fetch user information");
+    }
+};
+
+fetchUserInfo();
+
+}, []);
+
+const fetchLostAndFoundItems = async () => {
+    try {
         const response = await axios.get(
-          "http://localhost:3000/api/v1/LostAndFound/getLostAndFoundItems",
-          { withCredentials: true }
+            "http://localhost:3000/api/v1/LostAndFound/getLostAndFoundItems",
+            { withCredentials: true }
         );
 
         if (response.data.success) {
-          const apiItems = response.data.data.map((item) => ({
-            ...item,
-            type: item.type.toLowerCase(), // Normalize type for tabs
-            date: new Date(item.date).toISOString().split("T")[0], // Format date as YYYY-MM-DD
-            image: item.image || "https://via.placeholder.com/150", // Default placeholder image
-          }));
-          setItems(apiItems);
-          toast.success("Lost and Found items loaded successfully!");
+            const apiItems = response.data.data.map((item) => ({
+                ...item,
+                type: item.type.toLowerCase(), // Normalize type for tabs
+                date: new Date(item.date).toISOString().split("T")[0], // Format date as YYYY-MM-DD
+                image: item.image || "https://via.placeholder.com/150", // Default placeholder image
+            }));
+            setItems(apiItems);
+            toast.success("Lost and Found items loaded successfully!");
         } else {
-          toast.error(`Failed to fetch items: ${response.data.message}`);
+            toast.error(`Failed to fetch items: ${response.data.message}`);
         }
-      } catch (error) {
+    } catch (error) {
         console.error("Error fetching Lost and Found items:", error);
         toast.error("Error fetching items. Please try again later.");
-      }
-    };
+    }
+};
 
+useEffect(() => {
     fetchLostAndFoundItems();
-  }, []);
+}, []);
 
   // Adjust items per page based on viewport
   useEffect(() => {
@@ -101,6 +119,19 @@ const LostAndFound = () => {
     setItems([...items, formattedNewItem]);
     setIsAddItemDialogOpen(false);
   };
+
+  const handleDeleteOrClaimItem = async (itemId) => {
+    try {
+        // Make API call to delete or claim the item
+        await axios.delete(`http://localhost:3000/api/v1/LostAndFound/deleteAnItem/${itemId}`, { withCredentials: true });
+        toast.success("Item deleted or claimed successfully!");
+        // Fetch the updated list of items
+        fetchLostAndFoundItems();
+    } catch (error) {
+        console.error("Error deleting or claiming item:", error);
+        toast.error("Failed to delete or claim item. Please try again later.");
+    }
+};
 
   const renderPaginationItems = () => {
     const pageNumbers = [];
@@ -185,11 +216,11 @@ const LostAndFound = () => {
               </div>
 
               <TabsContent value="lost">
-                <ItemGrid items={paginatedItems} />
+                <ItemGrid handleDeleteOrClaimItem={handleDeleteOrClaimItem} items={paginatedItems} CurrentUsername={CurrentUsername} />
               </TabsContent>
 
               <TabsContent value="found">
-                <ItemGrid items={paginatedItems} />
+                <ItemGrid handleDeleteOrClaimItem={handleDeleteOrClaimItem} items={paginatedItems} CurrentUsername={CurrentUsername} />
               </TabsContent>
             </Tabs>
 
@@ -224,11 +255,11 @@ const LostAndFound = () => {
   );
 };
 
-const ItemGrid = ({ items }) => {
+const ItemGrid = ({ items , CurrentUsername , handleDeleteOrClaimItem }) => {
   return items.length > 0 ? (
     <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
       {items.map((item) => (
-        <ItemCard key={item.id} item={item} />
+        <ItemCard key={item.id} item={item} CurrentUsername={CurrentUsername} handleDeleteOrClaimItem={handleDeleteOrClaimItem} />
       ))}
     </div>
   ) : (

@@ -210,6 +210,44 @@ export const getFriends = async (req, res) => {
 };
 
 
+export const declineFriendRequest = async (req, res) => {
+    try {
+        const db = await connectDB(); // Establish database connection
+        const userId = req.id; // The ID of the logged-in user
+        const otherUserId = req.params.id; // The ID of the other user from the request parameters
+
+        // Ensure user_id_1 is the smaller and user_id_2 is the larger
+        const [user_id_1, user_id_2] = userId < otherUserId ? [userId, otherUserId] : [otherUserId, userId];
+
+        // Query to delete the friendship request where the status is 'Requested'
+        const query = `
+            DELETE FROM Friendship
+            WHERE (User_ID_1 = ? AND User_ID_2 = ?) OR (User_ID_1 = ? AND User_ID_2 = ?)
+            AND Status = 'Requested'
+        `;
+
+        const [result] = await db.promise().execute(query, [user_id_1, user_id_2, user_id_2, user_id_1]);
+
+        if (result.affectedRows > 0) {
+            res.status(200).json({
+                success: true,
+                message: 'Friend request declined successfully.',
+            });
+        } else {
+            res.status(404).json({
+                success: false,
+                message: 'No friend request found or already declined.',
+            });
+        }
+    } catch (error) {
+        console.error('Error declining friend request:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Server error. Please try again later.',
+        });
+    }
+};
+
 
 export const acceptFriendRequest = async (req, res) => {
     try {
@@ -272,10 +310,60 @@ await db.promise().execute(
 
         res.status(200).json({
             message: 'Friend request accepted.',
-            chatroomId: chatroomId
+            chatroomId: chatroomId,
+            success:true
         });
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Server error', error });
+    }
+};
+
+
+export const getFriendRequests = async (req, res) => {
+    try {
+        const db = await connectDB(); // Establish database connection
+        const userId = req.id; // The ID of the logged-in user, obtained from the request
+
+        // Query to fetch friend requests with requester details
+        const query = `
+            SELECT 
+                CASE 
+                    WHEN Friendship.User_ID_1 = ? THEN Friendship.User_ID_2
+                    ELSE Friendship.User_ID_1
+                END AS requester_id,
+                User.username AS name,
+                User.profilePicture AS profilePicture
+            FROM Friendship
+            JOIN User 
+                ON (User.User_ID = Friendship.User_ID_1 AND Friendship.User_ID_2 = ?)
+                OR (User.User_ID = Friendship.User_ID_2 AND Friendship.User_ID_1 = ?)
+            WHERE Friendship.Status = 'Requested'
+        `;
+
+        const [rows] = await db.promise().execute(query, [userId, userId, userId]);
+
+        if (rows.length > 0) {
+            res.status(200).json({
+                success: true,
+                data: rows.map((row) => ({
+                    id: row.requester_id,
+                    name: row.name,
+                    profilePicture: row.profilePicture,
+                })),
+            });
+        } else {
+            res.status(200).json({
+                success: true,
+                data:[],
+                message: 'No incoming friend requests.',
+            });
+        }
+    } catch (error) {
+        console.error('Error fetching friend requests:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Server error. Please try again later.',
+        });
     }
 };
