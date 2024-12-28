@@ -96,7 +96,9 @@ const Chat = () => {
 
     useEffect(() => {
         socket.on("receiveRoomMessage", (data) => {
+            console.log("ahskjsasnka : Received room message:", data);
             setMessages((prev) => [...prev, data]);
+            console.log("Messages:", messages);
         });
 
         socket.on("receivePrivateMessage", (data) => {
@@ -122,10 +124,15 @@ const Chat = () => {
             setReceiverID(friendId);
         }
         setCurrentChatroomId(chatId);
+        setActiveRoom(chatName);
+        console.log("Chat ID:", chatId);
+        console.log("Chat room:", chatName);
 
         if (isRoom) {
             setActiveRoom(chatName);
-            socket.emit("joinRoom", currentChatroomId);
+            alert("Joining room: " + chatName);
+            alert("Current Chatroom ID: " + chatId);
+            socket.emit("joinRoom", chatId);
         } else {
             setActiveRoom(null);
         }
@@ -160,15 +167,16 @@ const Chat = () => {
         };
     
         console.log("Sending message:", messageData);
-    
+        
         if (activeRoom) {
-            socket.emit("sendRoomMessage", { room: activeRoom, message: newMessage, chatroomId: currentChatroomId });
+            console.log("Inside active room: " ,currentChatroomId);
+            socket.emit("sendRoomMessage", { room: activeRoom, message: newMessage, chatroomId: currentChatroomId, Sender_Name: currentUsername });
         } else {
-            socket.emit("sendPrivateMessage", { recipientId: receiverID, message: newMessage , Sender_Name:currentUsername });
+            socket.emit("sendPrivateMessage", { recipientId: receiverID, message: newMessage, Sender_Name: currentUsername });
         }
     
         try {
-            const response = await axios.post(`http://localhost:3000/api/v1/message/sendMessage/${currentChatroomId}`, messageData, {withCredentials:true});
+            const response = await axios.post(`http://localhost:3000/api/v1/message/sendMessage/${currentChatroomId}`, messageData, { withCredentials: true });
             toast.success("Message sent successfully");
             console.log("Response:", response.data);
         } catch (error) {
@@ -182,7 +190,7 @@ const Chat = () => {
 
         const handleLeaveChatRoom = () => {
         if (activeRoom) {
-            socket.emit("leaveRoom", activeRoom);
+            socket.emit("leaveRoom", currentChatroomId);
             setActiveRoom(null);
         }
         setActiveChat(null);

@@ -26,9 +26,10 @@ io.on('connection', (socket) => {
     });
 
     // Handling chatroom messages
-    socket.on('joinRoom', (room) => {
-        socket.join(room);
-        console.log(`User ${socket.id} joined room: ${room}`);
+    socket.on('joinRoom', (roomid) => {
+        console.log(`User ${socket.id} joining room: ${roomid}`);
+        socket.join(roomid);
+        console.log(`User ${socket.id} joined room: ${roomid}`);
     });
 
     socket.on('leaveRoom', (room) => {
@@ -36,25 +37,30 @@ io.on('connection', (socket) => {
         console.log(`User ${socket.id} left room: ${room}`);
     });
 
-    socket.on('sendRoomMessage', async ({ room, message, chatroomId }) => {
-        const timestamp = new Date().toLocaleTimeString();
+    socket.on('sendRoomMessage', async ({ room, message, chatroomId, Sender_Name }) => {
+        const timestamp = new Date();
+        // console.log(`Recipient socket ID: ${recipientSocketId}`);
+        // console.log(`Recipient socket ID: ${recipientSocketId}`);
+        // console.log(message);
+        // console.log(timestamp);
+        // console.log(Sender_Name);
+        console.log(`Room: ${room}`);
+        console.log(`Chatroom: ${chatroomId}`);
+        console.log(`Message: ${message}`);
+        console.log(`Sender: ${Sender_Name}`);
 
-        // Emit message to room
-        socket.to(room).emit('receiveRoomMessage', {
-            message,
-            sender: socket.id,
-            timestamp,
-        });
 
-        // Save message to the database via API
-        try {
-            await axios.post(`http://localhost:3000/api/v1/message/sendMessage/${chatroomId}`, {
-                content: message,
-                timestamp,
+        if (room) { // Emit message to room
+            console.log('inside room')
+            io.to(chatroomId).emit('receiveRoomMessage', {
+                Content: message,
+                Sender_Name: Sender_Name,
+                Timestamp: timestamp,
             });
-            console.log(`Message saved to chatroom ${chatroomId}`);
-        } catch (error) {
-            console.error(`Failed to save message to chatroom ${chatroomId}`, error);
+
+            console.log(`Room Message from ${Sender_Name} to ${chatroomId}: ${message}`);
+        } else {
+            console.log(`Chatroom ${chatroomId} error.`);
         }
     });
 
@@ -62,11 +68,11 @@ io.on('connection', (socket) => {
     socket.on('sendPrivateMessage', async ({ recipientId, message,Sender_Name }) => {
         const recipientSocketId = userSocketMap.get(recipientId);
         const timestamp = new Date();
-        console.log(`Recipient socket ID: ${recipientSocketId}`);
-        console.log(`Recipient socket ID: ${recipientSocketId}`);
-        console.log(message);
-        console.log(timestamp);
-        console.log(Sender_Name);
+        // console.log(`Recipient socket ID: ${recipientSocketId}`);
+        // console.log(`Recipient socket ID: ${recipientSocketId}`);
+        // console.log(message);
+        // console.log(timestamp);
+        // console.log(Sender_Name);
 
         if (recipientSocketId) {
             io.to([recipientSocketId,socket.id]).emit('receivePrivateMessage', {
