@@ -1,12 +1,30 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { User, Search, MessageCircle, LogOut, Box, MessageSquare } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import DostlukLogo from "@/assets/dostluksvg.svg";
 import axios from "axios";
 import { toast } from "sonner";
 
-const Sidebar = ({ isSidebarVisible, setIsSidebarVisible, profilePicture }) => {
+const Sidebar = ({ isSidebarVisible, setIsSidebarVisible}) => {
   const navigate = useNavigate();
+
+const [profilePicture, setProfilePicture] = useState(null); 
+
+  useEffect(() => {
+    const fetchUserInfo = async () => {
+        try {
+            const response = await axios.get('http://localhost:3000/api/v1/user/getuserinfo', { withCredentials: true });
+            setProfilePicture(response.data.profilePicture);
+            
+        } catch (error) {
+            toast.error("Failed to fetch user information");
+        }
+    };
+
+    fetchUserInfo();
+}, []);
+
+
 
   const handleLogout = async () => {
     try {

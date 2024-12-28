@@ -203,7 +203,7 @@ const FindFriends = () => {
                       {profile.commonInterests.map((interest, index) => (
                         <Badge
                           key={index}
-                          variant="secondary"
+                          variant="default"
                           className="px-2 py-1 text-xs font-medium"
                         >
                           {interest}

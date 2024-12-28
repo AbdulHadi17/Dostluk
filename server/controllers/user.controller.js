@@ -233,7 +233,8 @@ export const getUserInfo = async (req, res) => {
       `
       SELECT 
         User_ID AS userId, 
-        username
+        username,
+        profilePicture
       FROM 
         user
       WHERE 
@@ -247,12 +248,13 @@ export const getUserInfo = async (req, res) => {
     }
 
     // Extract data from query result
-    const { userId: fetchedUserId, username } = userInfo[0];
+    const { userId: fetchedUserId, username , profilePicture } = userInfo[0];
 
     // Send response
     return res.status(200).json({
       userId: fetchedUserId,
       username,
+      profilePicture,
       success: true,
     });
   } catch (error) {

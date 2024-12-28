@@ -16,6 +16,7 @@ export const getLostAndFoundItems = async (req, res) => {
                 i.Item_Picture AS itemPicture,
                 s.Status_name AS itemStatus,
                 u.username AS reportedBy,
+                u.email AS ReporterEmail,
                 u.profilePicture AS reporterProfilePicture,
                 i.Reported_Date AS reportedDate
             FROM 
@@ -39,6 +40,7 @@ export const getLostAndFoundItems = async (req, res) => {
             reportedBy: item.reportedBy,
             profilePicture: item.reporterProfilePicture || null, // Default profile picture
             date: item.reportedDate,
+            email: item.ReporterEmail
         }));
 
         return res.status(200).json({ data: response, success: true });
