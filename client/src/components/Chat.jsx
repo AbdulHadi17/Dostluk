@@ -130,8 +130,6 @@ const Chat = () => {
 
         if (isRoom) {
             setActiveRoom(chatName);
-            alert("Joining room: " + chatName);
-            alert("Current Chatroom ID: " + chatId);
             socket.emit("joinRoom", chatId);
         } else {
             setActiveRoom(null);
@@ -188,14 +186,35 @@ const Chat = () => {
     };
 
 
-        const handleLeaveChatRoom = () => {
-        if (activeRoom) {
-            socket.emit("leaveRoom", currentChatroomId);
+    const handleLeaveChatRoom = async () => {
+        if (!currentChatroomId) return;
+    
+        try {
+            // Send the DELETE request to the backend
+            const response = await axios.delete(`http://localhost:3000/api/v1/chatrooms/leaveChatroom/${currentChatroomId}`, { withCredentials: true });
+            console.log("Successfully left the chatroom:", response.data);
+    
+            // Remove the chatroom from the state
+            setChatRooms((prevRooms) => prevRooms.filter((room) => room.id !== currentChatroomId));
+    
+            // Clear the active chat and messages state
+            setActiveChat(null);
+            setMessages([]);
             setActiveRoom(null);
+            setCurrentChatroomId(null);
+    
+            // Inform the user
+            toast.success("You have left the chatroom successfully.");
+    
+            // Optionally, you can emit the event for the socket server to handle the disconnection
+            socket.emit("leaveRoom", currentChatroomId);
+    
+        } catch (error) {
+            console.error("Error leaving chatroom:", error);
+            toast.error("Failed to leave the chatroom.");
         }
-        setActiveChat(null);
-        setMessages([]);
     };
+    
 
 
     return (

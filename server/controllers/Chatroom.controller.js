@@ -289,3 +289,39 @@ export const deleteChatroom = async (req, res) => {
         return res.status(500).json({ error: "Internal Server Error", success: false });
     }
 };
+
+export const leaveChatroom = async (req, res) => {
+    const chatroomId = req.params.id;  // Get the chatroom ID from the URL parameter.
+    const userId = req.id;  // Get the user ID from the request.
+
+    if (!chatroomId || !userId) {
+        return res.status(400).json({ message: 'Chatroom ID and User ID are required.' });
+    }
+
+    try {
+        const db = await connectDB();
+
+        // Check if the user is a participant in the chatroom before attempting to remove them
+        const checkQuery = `
+            SELECT * FROM Chatroom_Participants 
+            WHERE Chatroom_ID = ? AND User_ID = ?;
+        `;
+        const [existingParticipant] = await db.promise().execute(checkQuery, [chatroomId, userId]);
+
+        if (existingParticipant.length === 0) {
+            return res.status(404).json({ message: 'You are not a participant in this chatroom.' });
+        }
+
+        // Remove the user from the chatroom
+        const deleteQuery = `
+            DELETE FROM Chatroom_Participants 
+            WHERE Chatroom_ID = ? AND User_ID = ?;
+        `;
+        await db.promise().execute(deleteQuery, [chatroomId, userId]);
+
+        res.status(200).json({ message: 'Successfully left the chatroom.' });
+    } catch (error) {
+        console.error('Error leaving chatroom:', error.message);
+        res.status(500).json({ message: 'Server error', error: error.message });
+    }
+};

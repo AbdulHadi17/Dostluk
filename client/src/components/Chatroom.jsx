@@ -24,38 +24,52 @@ export function Chatroom() {
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(false);
-  useEffect(() => {
-    const fetchChatrooms = async () => {
-      setLoading(true);
-      try {
-        const response = await axios.get('http://localhost:3000/api/v1/chatrooms/suggestedChatrooms', { withCredentials: true });
-        const { data } = response;
   
-        if (data.success && Array.isArray(data.chatrooms)) {
-          const formattedChatrooms = data.chatrooms.map(room => ({
-            id: room.chatroomId || '', // Use id directly
-            name: room.name || '', // Use the name directly
-            description: room.description || '', // Use description directly
-            type_id: room.type_id || '', // Use type_id for unique ID
-            interests: Array.isArray(room.interests) ? room.interests : [], // Ensure interests is an array
-            members: [], // Default to empty array as members aren't provided
-            isPublic: true, // Assume public if not provided
-            friendProfile: '/default-avatar.png', // Default profile picture
-          }));
-          setChatrooms(formattedChatrooms);
-        } else {
-          throw new Error('Invalid response format');
-        }
-      } catch (error) {
-        console.error(error.message);
-      } finally {
-        setLoading(false);
+  const fetchChatrooms = async () => {
+    setLoading(true);
+    try {
+      const response = await axios.get('http://localhost:3000/api/v1/chatrooms/suggestedChatrooms', { withCredentials: true });
+      const { data } = response;
+  
+      if (data.success && Array.isArray(data.chatrooms)) {
+        const formattedChatrooms = data.chatrooms.map(room => ({
+          id: room.chatroomId || '',
+          name: room.name || '',
+          description: room.description || '',
+          type_id: room.type_id || '',
+          interests: Array.isArray(room.interests) ? room.interests : [],
+          members: [],
+          isPublic: true,
+          friendProfile: '/default-avatar.png',
+        }));
+        setChatrooms(formattedChatrooms);
+      } else {
+        throw new Error('Invalid response format');
       }
-    };
+    } catch (error) {
+      console.error(error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
   
+  
+  useEffect(() => {
+    
     fetchChatrooms();
   }, []);
+
+  const handleJoinChatroom = (chatroomId) => {
+    setChatrooms(prevChatrooms =>
+      prevChatrooms.map(room =>
+        room.id === chatroomId
+          ? { ...room, members: [...room.members, { name: 'New Member', avatar: '/default-avatar.png' }] }
+          : room
+      )
+    );
+  };
   
+
   const filteredChatrooms = chatrooms.filter(room => {
     const id = room.id || ''; // Default to empty string if undefined
     const title = room.title || ''; // Default to empty string if undefined
@@ -112,7 +126,7 @@ export function Chatroom() {
           exit={{ opacity: 0 }}
           transition={{ duration: 0.3 }}>
           {paginatedChatrooms.map((room,index) => (
-            <ChatroomCard key={index} chatroom={room} />
+            <ChatroomCard key={index} chatroom={room} onJoin={handleJoinChatroom} fetchChatrooms={fetchChatrooms} />
           ))}
         </motion.div>
       </AnimatePresence>

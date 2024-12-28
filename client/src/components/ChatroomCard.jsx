@@ -10,7 +10,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import axios from 'axios';
 import { toast } from 'sonner';
 
-export function ChatroomCard({ chatroom }) {
+export function ChatroomCard({ chatroom,  onJoin , fetchChatrooms }) {
   const {
     id = '', // Default to empty string
     name = '', // Default to empty string
@@ -24,15 +24,19 @@ export function ChatroomCard({ chatroom }) {
 
   const handleJoinChatroom = async () => {
     try {
-      
       const response = await axios.post(
         `http://localhost:3000/api/v1/chatrooms/joinchatroom/${id}`,
         {},
         { withCredentials: true }
       );
-
+  
       if (response.data.success) {
         toast.success(response.data.message || 'Successfully joined the chatroom!');
+        
+        // Call fetchChatrooms to refetch chatrooms after joining
+        if (fetchChatrooms) {
+          fetchChatrooms();  // Refetch chatrooms from the server
+        }
       } else {
         toast.error(response.data.message || 'Failed to join the chatroom.');
       }
@@ -46,7 +50,7 @@ export function ChatroomCard({ chatroom }) {
       }
     }
   };
-
+  
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.9 }}
